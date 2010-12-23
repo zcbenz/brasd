@@ -1,0 +1,40 @@
+Introduction
+============
+This is an unofficial client of Southeast University BRAS service, which
+helps Linux users quickly use BRAS.
+
+Install
+=======
+See INSTALL file for install instructions.
+
+Bug Report and Suggestions
+==========================
+If you encountered a bug or want a new feature, please contact me:
+Zhao Cheng <kitten@seu.edu.cn>
+
+When reporting bugs, please start brasd in DEBUG mode:
+brasd -D
+
+and paste the output in the post.
+
+You can also to the Linux board on http://bbs.seu.edu.cn to ask for help.
+
+Copyright
+=========
+All codes are under public domain. See COPYING file for details.
+
+Programs
+========
+brasd package consists of two parts: brasd and bras-client.
+
+brasd
+-----
+brasd is a BRAS daemon, which is a wrapper of xl2tpd. it translates
+xl2tpd's output and provide an interface to report the connection state
+and control the connection. brasd is written specially for Southeast 
+University's BRAS service.
+
+bras-client
+-----------
+bras-client uses brasd's interface and provide a graphic way to connect to
+BRAS. bras-client can be disabled when compiling(see INSTALL).

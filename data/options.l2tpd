@@ -1,0 +1,5 @@
+lock
+noauth
+proxyarp
+defaultroute
+name %s

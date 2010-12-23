@@ -1,0 +1,27 @@
+BRAS图形客户端开始测试
+
+这是一个BRAS图形客户端，*nix only，原生GTK+程序，可以自动照料好网关、路由
+表，也不会向你乞求root权限。
+
+Ubuntu用户按下面的顺序安装附件里的两个deb包即可：
+xl2tpd_1.2.6+dfsg-1_i386.deb
+brasd_0.1.0-1_i386.deb
+
+其他发行版用户先下载好源码包brasd-0.1.0.tar.gz，然后运行下面的命令编译安装：
+tar zxvf brasd-0.1.0.tar.gz
+cd brasd-0.1.0
+./configure --prefix=/usr
+make
+sudo make install
+sudo make install-service # 安装系统服务
+
+安装完成后直接点击GNOME菜单中的 Internet -> BRAS Client 即可启动BRAS客户端，
+无须任何繁琐配置，无须笨笨的brashelp，比Windows下要方便简单得多：）
+
+注意：
+* 程序目前可能存在很多问题，所以强烈不建议新手安装。老手们就多多帮忙找bug吧。
+* 这个客户端不会和之前的bras脚本产生冲突，可以放心使用。
+* 编译时需要 libevent-dev 和 libgtkmm-2.4-dev 两个开发包。
+* 源码包内的README对程序有比较详细的介绍。
+
+P.S.圣诞快乐~

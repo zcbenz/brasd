@@ -1,0 +1,11 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=BRAS Client
+Comment=Southeast University BRAS client
+Exec=bras-client
+Icon=bras-client.png
+Terminal=false
+Type=Application
+StartupNotify=false
+Categories=GNOME;Application;Network;
+
