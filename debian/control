@@ -3,7 +3,7 @@ Section: net
 Priority: extra
 Maintainer: Zhao Cheng <zcbenz@gmail.com>
 Homepage: http://bbs.seu.edu.cn
-Build-Depends: debhelper (>= 7.0.50~), autotools-dev, libgtkmm-2.4-dev, libevent-dev
+Build-Depends: debhelper (>= 7.0.50~), autotools-dev, libgtkmm-2.4-dev, libevent-dev, xl2tpd
 Standards-Version: 3.9.1
 
 Package: brasd

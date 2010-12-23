@@ -1,5 +1,5 @@
-brasd (0.1.0-1) unstable; urgency=low
+brasd (0.1.0-1ubuntu1) lucid; urgency=low
 
   * Initial release
 
- -- Zhao Cheng <zcbenz@gmail.com>  Wed, 22 Dec 2010 19:03:04 +0800
+ -- Zhao Cheng <zcbenz@gmail.com>  Thu, 23 Dec 2010 21:28:36 +0800
