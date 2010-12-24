@@ -1,3 +1,9 @@
+brasd (0.1.0-1ubuntu2) lucid; urgency=low
+
+  * Fix deb related bugs
+
+ -- Zhao Cheng <zcbenz@gmail.com>  Thu, 23 Dec 2010 22:33:07 +0800
+
 brasd (0.1.0-1ubuntu1) lucid; urgency=low
 
   * Initial release

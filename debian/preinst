@@ -13,11 +13,13 @@ set -e
 # for details, see http://www.debian.org/doc/debian-policy/ or
 # the debian-policy package
 
+. /lib/lsb/init-functions
+
 # must stop xl2tpd before install brasd
-echo -n "Stopping and disabling x2ltpd: "
+log_daemon_msg "Stopping and disabling xl2tpd: "
 start-stop-daemon --oknodo --stop --quiet --name xl2tpd > /dev/null 2>&1
 update-rc.d xl2tpd disable > /dev/null 2>&1
-echo "ok."
+log_end_msg $?
 
 case "$1" in
     install|upgrade)
