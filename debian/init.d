@@ -19,21 +19,28 @@ DESC=brasd
 
 test -x $DAEMON || exit 0
 
-PIDFILE=/var/run/$NAME.pid
+. /lib/lsb/init-functions
 
 set -e
 
+brasd_start () {
+	log_daemon_msg "Starting $DESC"
+	start-stop-daemon --start --quiet --exec $DAEMON
+	log_end_msg $?
+}
+
+brasd_stop () {
+	log_daemon_msg "Stopping $DESC"
+	start-stop-daemon --oknodo --stop --quiet --name xl2tpd
+	log_end_msg $?
+}
+
 case "$1" in
   start)
-	echo -n "Starting $DESC: "
-	start-stop-daemon --start --quiet --pidfile $PIDFILE \
-		--exec $DAEMON -- $DAEMON_OPTS
-	echo "$NAME."
+    brasd_start
 	;;
   stop)
-	echo -n "Stopping $DESC: "
-	start-stop-daemon --oknodo --stop --quiet --name xl2tpd 
-	echo "$NAME."
+    brasd_stop
 	;;
   force-reload)
 	start-stop-daemon --stop --test --quiet --pidfile \
@@ -42,13 +49,9 @@ case "$1" in
 	|| exit 0
 	;;
   restart)
-	echo -n "Restarting $DESC: "
-	start-stop-daemon --stop --quiet --pidfile \
-		$PIDFILE --exec $DAEMON
+    brasd_stop
 	sleep 1
-	start-stop-daemon --start --quiet --pidfile \
-		$PIDFILE --exec $DAEMON -- $DAEMON_OPTS
-	echo "$NAME."
+    brasd_start
 	;;
   *)
 	N=/etc/init.d/$NAME
