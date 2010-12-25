@@ -1,5 +1,7 @@
 #!/bin/bash
 
 make
+rm brasd-0.1.0.tar.gz
 make dist
+mv brasd-0.1.0.tar.gz ../brasd_0.1.0.orig.tar.gz
 debuild -kB16A1050

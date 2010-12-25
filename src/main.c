@@ -193,6 +193,7 @@ void translate(const char *output)
         alarm(0); /* unschedule sending CONNECTED */
 
         state = DISCONNECTED;
+        notify_send("BRAS", "BRAS disconnected", "notification-network-wireless-disconnected");
         post_state();
     }
     else if (strhcmp(output, "call_close:")) {
@@ -225,5 +226,6 @@ static void on_send_success(int sig) {
     alarm(0);
 
     state = CONNECTED;
+    notify_send("BRAS", "You have connected to BRAS", "notification-network-wireless-full");
     post_state();
 }

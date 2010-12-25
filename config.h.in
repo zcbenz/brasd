@@ -30,6 +30,9 @@
 /* Define to 1 if you have the <netdb.h> header file. */
 #undef HAVE_NETDB_H
 
+/* Support for Notify OSD */
+#undef HAVE_NOTIFY_OSD
+
 /* Define to 1 if you have the `socket' function. */
 #undef HAVE_SOCKET
 

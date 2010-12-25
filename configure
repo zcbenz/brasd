@@ -598,6 +598,7 @@ ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
+NOTIFY
 CLIENT_DIR
 GTKMM_LIBS
 GTKMM_CFLAGS
@@ -697,6 +698,7 @@ ac_user_opts='
 enable_option_checking
 enable_dependency_tracking
 enable_client
+enable_notify
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1334,6 +1336,7 @@ Optional Features:
   --disable-dependency-tracking  speeds up one-time build
   --enable-dependency-tracking   do not reject slow dependency extractors
   --disable-client        Do not compile bras-client (default: enabled)
+  --disable-notify        Disable Notify OSD support (default: enabled)
 
 Some influential environment variables:
   CC          C compiler command
@@ -4134,7 +4137,7 @@ do
   test -z "$as_dir" && as_dir=.
     for ac_exec_ext in '' $ac_executable_extensions; do
   if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
-    ac_cv_prog_XL2TPD="xl2tpd"
+    ac_cv_prog_XL2TPD="yes"
     $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
     break 2
   fi
@@ -4155,7 +4158,7 @@ fi
 
 
 
-if test "$XL2TPD" != "xl2tpd" ; then
+if test "$XL2TPD" != "yes" ; then
     { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "could not find x2tlpd
@@ -5191,6 +5194,71 @@ else
     CLIENT_DIR=
 fi
 
+
+
+# Check whether --enable-notify was given.
+if test "${enable_notify+set}" = set; then :
+  enableval=$enable_notify; enable_notify=$enableval
+else
+  enable_notify=yes
+fi
+
+
+if test "x$enable_notify" = "xyes" ; then
+    # Extract the first word of "notify-send", so it can be a program name with args.
+set dummy notify-send; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if test "${ac_cv_prog_NOTIFY+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$NOTIFY"; then
+  ac_cv_prog_NOTIFY="$NOTIFY" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_NOTIFY="yes"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+NOTIFY=$ac_cv_prog_NOTIFY
+if test -n "$NOTIFY"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $NOTIFY" >&5
+$as_echo "$NOTIFY" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+
+    if test "$NOTIFY" != "yes" ; then
+        { $as_echo "$as_me:${as_lineno-$LINENO}: notify-send cannot be found, so support for Notify OSD will be disabled" >&5
+$as_echo "$as_me: notify-send cannot be found, so support for Notify OSD will be disabled" >&6;}
+
+$as_echo "#define HAVE_NOTIFY_OSD 0" >>confdefs.h
+
+    else
+
+$as_echo "#define HAVE_NOTIFY_OSD 1" >>confdefs.h
+
+    fi
+else
+
+$as_echo "#define HAVE_NOTIFY_OSD 0" >>confdefs.h
+
+fi
 
 ac_config_files="$ac_config_files Makefile src/Makefile data/Makefile bras-client/Makefile bras-client/ui/Makefile debian/Makefile"
 
