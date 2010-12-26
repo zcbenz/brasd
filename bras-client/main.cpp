@@ -70,7 +70,7 @@ static void on_quit() {
 
 static void on_login() {
     static LoginDlg dlg(bras);
-    static sigc::connection con(dlg.signal_login.connect(
+    static sigc::connection dummy_vaule(dlg.signal_login.connect(
         sigc::bind(sigc::ptr_fun(on_dlg_response), Gtk::RESPONSE_CONNECT)));
 
     dlg.show();

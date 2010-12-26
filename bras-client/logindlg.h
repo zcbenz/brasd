@@ -17,6 +17,7 @@ public:
 
     void show();
 
+    /* emitted when login */
     sigc::signal<void> signal_login;
 
 private:

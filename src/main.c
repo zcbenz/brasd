@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     state = DISCONNECTED;
 
     /* init server */
-    if((sfd = init_server(NULL, "10086")) < 0)
+    if((sfd = init_server("127.0.0.1", "10086")) < 0)
     {
         fputs("Cannot init server, brasd already runs?\n", stderr);
         kill(xl2tpd_fd, SIGKILL);
