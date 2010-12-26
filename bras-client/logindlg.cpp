@@ -58,8 +58,6 @@ void LoginDlg::on_login()
     }
 
     bras_set(bras_, username.c_str(), password.c_str());
-    usleep(10000);
-    bras_connect(bras_);
 
     config_t config;
     strcpy(config.username, username.c_str());
@@ -67,6 +65,9 @@ void LoginDlg::on_login()
     write_config(&config);
 
     window_->hide();
+
+    usleep(10000);
+    signal_login.emit();
 }
 
 void LoginDlg::on_close() {

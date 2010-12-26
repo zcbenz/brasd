@@ -1,6 +1,8 @@
 #ifndef LOGINDLG_H
 #define LOGINDLG_H
 
+#include <sigc++/signal.h>
+
 namespace Gtk {
     class Window;
     class ComboBoxEntry;
@@ -14,6 +16,8 @@ public:
     LoginDlg(int bras);
 
     void show();
+
+    sigc::signal<void> signal_login;
 
 private:
     void on_login();

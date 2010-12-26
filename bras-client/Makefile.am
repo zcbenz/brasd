@@ -4,6 +4,7 @@ bin_PROGRAMS = bras-client
 
 bras_client_SOURCES = \
 	main.cpp \
+	main.h \
 	bras.cpp \
 	bras.h \
 	utils.h \

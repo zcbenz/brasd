@@ -8,7 +8,8 @@ enum BRAS_STATE
     DISCONNECTED,
     CRITICAL_ERROR,
     CLOSED,
-    INUSE
+    INUSE,
+    STATES_COUNT
 };
 
 int init_socket(const char *node, const char *port);
