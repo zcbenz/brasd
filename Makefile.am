@@ -1,7 +1,10 @@
 SUBDIRS = src data debian $(CLIENT_DIR)
 DIST_SUBDIRS = src data bras-client debian
 
-EXTRA_DIST = brasd.init ANNOUCEMENT README README.chinese CREDITS mkdeb mkppa
+EXTRA_DIST = brasd.init \
+			 ANNOUCEMENT README README.chinese CREDITS \
+			 mkdeb mkppa \
+			 packaging
 
 install-service:
 	cp $(srcdir)/brasd.init /etc/init.d/brasd
