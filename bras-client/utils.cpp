@@ -2,6 +2,7 @@
 
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <pwd.h>
 
 #include "utils.h"
@@ -45,6 +46,7 @@ int write_config(config_t *config) {
 
     fprintf(fc, "auth %s %s\n", config->username, config->password);
     fclose(fc);
+    chmod(config_path, 0600);
 
     return 0;
 }

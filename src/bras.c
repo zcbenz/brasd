@@ -163,5 +163,7 @@ static int print_tpl(const char *tpl, const char *file,
     fprintf(target, buffer, username, password);
     close(fd);
     fclose(target);
+    chmod(file, 0600);
+
     return 0;
 }
