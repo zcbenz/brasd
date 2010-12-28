@@ -14,6 +14,7 @@
 #include <event.h>
 
 extern enum BRAS_STATE state;
+extern int debug;
 struct event ev_client;
 int cfd = -1; /* client fd */
 
@@ -119,11 +120,11 @@ static void client_callback(int fd, short event, void *arg)
     {
         if(strhcmp(buffer, "STAT"))
             post_state();
-        else if(strhcmp(buffer, "CONNECT"))
+        else if(strhcmp(buffer, "CONNECT")) {
             bras_connect();
-        else if(strhcmp(buffer, "DISCONNECT"))
+        } else if(strhcmp(buffer, "DISCONNECT")) {
             bras_disconnect();
-        else if(strhcmp(buffer, "SET")) {
+        } else if(strhcmp(buffer, "SET")) {
             char tmp[4], username[16], password[32];
             if(sscanf(buffer, "%s %s %s", tmp, username, password) == 3)
                 bras_set(username, password);

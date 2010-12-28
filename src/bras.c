@@ -67,12 +67,12 @@ int bras_add_route()
 int bras_connect()
 {
     bras_add_route();
-    return write_to("c seubras\n", XL2TPD_CONTORL);
+    return write_to("c seubras", XL2TPD_CONTORL);
 }
 
 int bras_disconnect()
 {
-    return write_to("d seubras\n", XL2TPD_CONTORL);
+    return write_to("d seubras", XL2TPD_CONTORL);
 }
 
 int bras_set(const char *username, const char *password)

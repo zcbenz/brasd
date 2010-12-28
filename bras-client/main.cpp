@@ -122,6 +122,7 @@ static void on_dlg_response(int response) {
     switch(response) {
         case Gtk::RESPONSE_DISCONNECT:
         case Gtk::RESPONSE_CANCEL:
+            fputs("canceled", stderr);
             bras_disconnect(bras);
             break;
         case Gtk::RESPONSE_CONNECT:
@@ -132,17 +133,18 @@ static void on_dlg_response(int response) {
             exit(0);
     }
 
-    /* if not receive state in 500ms, show no_response dialog */
+    /* if not receive state in 100ms, show no_response dialog */
     con_response = new sigc::connection(
-        Glib::signal_timeout().connect(sigc::ptr_fun(on_brasd_no_response), 500));
+        Glib::signal_timeout().connect(sigc::ptr_fun(on_brasd_no_response), 100));
 }
 
 static bool on_brasd_no_response() {
     if(!cur_dlg) {
-        cur_dlg = new Gtk::MessageDialog("Waiting for brasd's response...",
+        cur_dlg = new Gtk::MessageDialog("Waiting for brasd's response...\n"
+                                         "(Are you sure you can connect to bras.seu.edu.cn?)",
                                          false,
                                          Gtk::MESSAGE_OTHER,
-                                         Gtk::BUTTONS_CANCEL,
+                                         Gtk::BUTTONS_CLOSE,
                                          true);
         cur_dlg->signal_response().connect(sigc::ptr_fun(on_dlg_response));
         cur_dlg->show();
@@ -150,3 +152,4 @@ static bool on_brasd_no_response() {
 
     return false;
 }
+
