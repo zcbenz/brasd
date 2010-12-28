@@ -1,0 +1,11 @@
+2010-12-28 Zhao Cheng <zcbenz@gmail.com>
+
+	* Will show a no_response dialog when brasd didn't response
+	* brasd only accpets connections from local programes
+	* Change configuration files's permission to 0600
+	* Debian init script's output is more standard
+
+2010-12-23 Zhao Cheng <zcbenz@gmail.com>
+
+	* Initial release
+
