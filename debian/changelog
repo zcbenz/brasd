@@ -1,3 +1,12 @@
+brasd (0.1.1-1ubuntu1) lucid; urgency=low
+
+  * Will show a no_response dialog when brasd didn't response
+  * brasd only accpets connections from local programes
+  * Change configuration files's permission to 0600
+  * Debian init script's output is more standard
+
+ -- Zhao Cheng <zcbenz@gmail.com>  Tue, 28 Dec 2010 12:06:08 +0800
+
 brasd (0.1.0-1ubuntu2) lucid; urgency=low
 
   * Fix deb related bugs

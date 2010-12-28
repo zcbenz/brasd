@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.67])
-AC_INIT([brasd], [0.1.0], [kitten@seu.edu.cn])
+AC_INIT([brasd], [0.1.1], [kitten@seu.edu.cn])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
 
