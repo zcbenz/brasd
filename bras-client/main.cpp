@@ -140,8 +140,7 @@ static void on_dlg_response(int response) {
 
 static bool on_brasd_no_response() {
     if(!cur_dlg) {
-        cur_dlg = new Gtk::MessageDialog("Waiting for brasd's response...\n"
-                                         "(Are you sure you can connect to bras.seu.edu.cn?)",
+        cur_dlg = new Gtk::MessageDialog("Waiting for brasd's response...",
                                          false,
                                          Gtk::MESSAGE_OTHER,
                                          Gtk::BUTTONS_CLOSE,
