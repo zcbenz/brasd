@@ -11,7 +11,7 @@ brasd 0.1.1 released
 * ubuntu的启动脚本更加规范化
 * 其余小问题的修复和代码的调整
 
-现在brasd基本不会有什么大问题，欢迎在生产环境下使用。
+本来想先增加一些有用的功能再发布，不过期末在即，明年再说吧：）
 
 Ubuntu下建议从网络安装：
   sudo add-apt-repository ppa:zcbenz/brasd
@@ -24,7 +24,7 @@ Ubuntu下建议从网络安装：
   64位系统：brasd_0.1.1-1ubuntu1_amd64.deb
 
 其他发行版用户先下载好源码包brasd-0.1.1.tar.gz，确保安装了编译需要的开发包
-libevent-dev 和然后运行下面的命令编译安装：
+libevent-dev 和 libgtkmm-2.4-dev然后运行下面的命令编译安装：
   tar zxvf brasd-0.1.1.tar.gz
   cd brasd-0.1.1
   ./configure --prefix=/usr
