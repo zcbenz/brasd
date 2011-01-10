@@ -32,3 +32,11 @@ libevent-dev 和 libgtkmm-2.4-dev然后运行下面的命令编译安装：
   sudo make install
   sudo make install-service # 安装系统服务
 
+项目主页：
+https://launchpad.net/brasd
+
+Google Code 上的项目镜像
+http://code.google.com/p/brasd/
+
+Ubuntu PPA:
+https://launchpad.net/~zcbenz/+archive/brasd

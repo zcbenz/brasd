@@ -17,13 +17,23 @@ int main(int argc, char *argv[])
                                Gtk::BUTTONS_OK,
                                true);
         msg.run();
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     Glib::signal_io().connect(sigc::ptr_fun(on_bras_state_change),
                               bras, Glib::IO_IN);
 
-    kit.run ();
+    kit.run();
+}
+
+inline Gtk::MessageDialog *create_dialog(const Glib::ustring& message,
+                                         Gtk::MessageType type,
+                                         Gtk::ButtonsType buttons)
+{
+    cur_dlg = new Gtk::MessageDialog(message, true, type, buttons, true);
+    cur_dlg->signal_response().connect(sigc::ptr_fun(on_dlg_response));
+
+    return cur_dlg;
 }
 
 static bool on_bras_state_change(Glib::IOCondition) {
@@ -53,19 +63,10 @@ static bool on_bras_state_change(Glib::IOCondition) {
     return true;
 }
 
-static void on_close() {
-    close(bras);
-    exit(0);
-}
-
 static void on_quit() {
-    Gtk::MessageDialog msg("brasd has quit", false,
-                           Gtk::MESSAGE_ERROR,
-                           Gtk::BUTTONS_OK,
-                           true);
-
-    msg.run();
-    on_close();
+    create_dialog("brasd has quit",
+                  Gtk::MESSAGE_ERROR,
+                  Gtk::BUTTONS_OK)->show();
 }
 
 static void on_login() {
@@ -77,22 +78,15 @@ static void on_login() {
 }
 
 static void on_connecting() {
-    cur_dlg = new Gtk::MessageDialog("Connecting to BRAS...",
-                                     false,
-                                     Gtk::MESSAGE_OTHER,
-                                     Gtk::BUTTONS_CANCEL,
-                                     true);
-    cur_dlg->signal_response().connect(sigc::ptr_fun(on_dlg_response));
-    cur_dlg->show();
+    create_dialog("Connecting to BRAS...",
+                  Gtk::MESSAGE_OTHER,
+                  Gtk::BUTTONS_CANCEL)->show();
 }
 
 static void on_connected() {
-    cur_dlg = new Gtk::MessageDialog("BRAS is now successfully connected",
-                                     false,
-                                     Gtk::MESSAGE_INFO,
-                                     Gtk::BUTTONS_NONE,
-                                     true);
-    cur_dlg->signal_response().connect(sigc::ptr_fun(on_dlg_response));
+    create_dialog("BRAS is now successfully connected",
+                  Gtk::MESSAGE_INFO,
+                  Gtk::BUTTONS_NONE);
 
     cur_dlg->add_button(GTK_STOCK_DISCONNECT, Gtk::RESPONSE_DISCONNECT);
     cur_dlg->add_button(GTK_STOCK_CLOSE, Gtk::RESPONSE_CLOSE)->grab_focus();
@@ -101,35 +95,30 @@ static void on_connected() {
 }
 
 static void on_using() {
-    Gtk::MessageDialog msg("brasd is occupied by another client", false,
-                           Gtk::MESSAGE_ERROR,
-                           Gtk::BUTTONS_OK,
-                           false);
-    msg.run();
-    exit(0);
+    create_dialog("brasd is occupied by another client",
+                  Gtk::MESSAGE_ERROR,
+                  Gtk::BUTTONS_OK)->show();
 }
 
 static void on_error() {
-    Gtk::MessageDialog msg("We got a critical error", false,
-                           Gtk::MESSAGE_ERROR,
-                           Gtk::BUTTONS_OK,
-                           false);
-    msg.run();
-    on_close();
+    create_dialog("We got a critical error",
+                  Gtk::MESSAGE_ERROR,
+                  Gtk::BUTTONS_OK)->show();
 }
 
 static void on_dlg_response(int response) {
     switch(response) {
         case Gtk::RESPONSE_DISCONNECT:
         case Gtk::RESPONSE_CANCEL:
-            fputs("canceled", stderr);
             bras_disconnect(bras);
             break;
         case Gtk::RESPONSE_CONNECT:
             bras_connect(bras);
             break;
         case Gtk::RESPONSE_CLOSE:
+        case Gtk::RESPONSE_OK:
         case Gtk::RESPONSE_DELETE_EVENT:
+            close(bras);
             exit(0);
     }
 
@@ -139,15 +128,10 @@ static void on_dlg_response(int response) {
 }
 
 static bool on_brasd_no_response() {
-    if(!cur_dlg) {
-        cur_dlg = new Gtk::MessageDialog("Waiting for brasd's response...",
-                                         false,
-                                         Gtk::MESSAGE_OTHER,
-                                         Gtk::BUTTONS_CLOSE,
-                                         true);
-        cur_dlg->signal_response().connect(sigc::ptr_fun(on_dlg_response));
-        cur_dlg->show();
-    }
+    if(!cur_dlg)
+        create_dialog("Waiting for brasd's response...",
+                      Gtk::MESSAGE_OTHER,
+                      Gtk::BUTTONS_CLOSE)->show();
 
     return false;
 }

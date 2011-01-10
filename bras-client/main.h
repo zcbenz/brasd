@@ -16,8 +16,11 @@ namespace Gtk {
 
 typedef void (*state_func_t)();
 
+inline Gtk::MessageDialog *create_dialog(const Glib::ustring& message,
+                                         Gtk::MessageType type,
+                                         Gtk::ButtonsType buttons);
+
 static bool on_bras_state_change(Glib::IOCondition io_condition);
-static void on_close();
 static void on_quit();
 static void on_login();
 static void on_connecting();
