@@ -10,7 +10,7 @@ using Glib::ustring;
 #include "bras.h"
 #include "utils.h"
 
-LoginDlg::LoginDlg(int bras) :bras_(bras)
+LoginDlg::LoginDlg(): bras_(Bras::get())
 {
     /* initialize widgets */
     Glib::RefPtr<Gtk::Builder> builder =
@@ -39,13 +39,15 @@ LoginDlg::LoginDlg(int bras) :bras_(bras)
     }
 }
 
-void LoginDlg::show()
-{
+void LoginDlg::show() {
     window_->show();
 }
 
-void LoginDlg::on_login()
-{
+void LoginDlg::hide() {
+    window_->hide();
+}
+
+void LoginDlg::on_login() {
     ustring username = entry_username_->get_active_text();
     ustring password = entry_password_->get_text();
 
@@ -57,7 +59,7 @@ void LoginDlg::on_login()
         return;
     }
 
-    bras_set(bras_, username.c_str(), password.c_str());
+    bras_->set(username.c_str(), password.c_str());
 
     config_t config;
     strcpy(config.username, username.c_str());

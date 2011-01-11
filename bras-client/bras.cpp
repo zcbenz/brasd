@@ -1,99 +1,93 @@
 #include "utils.h"
 #include "bras.h"
 
-#include <stdio.h>
-#include <string.h>
+#include <iostream>
 
-#include <unistd.h>
+#include <glibmm/ustring.h>
+using Glib::ustring;
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/tcp.h>
-#include <netdb.h>
+#include <giomm/error.h>
+#include <giomm/socket.h>
+#include <giomm/socketconnection.h>
+#include <giomm/socketclient.h>
+#include <giomm/inputstream.h>
+#include <giomm/outputstream.h>
 
-int init_socket(const char *node, const char *service)
-{
-    struct addrinfo hints, *result;
-    bzero(&hints, sizeof(struct addrinfo));
-    hints.ai_family   = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags    = AI_PASSIVE;
+Bras::State Bras::state_ = Bras::CONNECTED;
+char Bras::buffer_[256];
+sigc::signal<void, Bras::State, Bras::State> Bras::signal_state_changed;
+Glib::RefPtr<Gio::InputStream> Bras::input_;
+Glib::RefPtr<Gio::OutputStream> Bras::output_;
+Glib::RefPtr<Gio::SocketConnection> Bras::connection_;
 
-    if(getaddrinfo(node, service, &hints, &result))
-    {
-        perror("getaddrinfo");
-        return -1;
+/* state code strings */
+const ustring Bras::state_strings[COUNT] = {
+    "connected", "connecting", "disconnected", "error", "closed", "IN USE"
+};
+
+Bras::Bras(const char *domain, int port) {
+    /* Connect to brasd */
+    Glib::RefPtr<Gio::SocketClient> client = Gio::SocketClient::create();
+
+    if(!(connection_ = client->connect_to_host(domain, port)))
+        throw Gio::Error(Gio::Error::CONNECTION_REFUSED, "brasd has not been started.");
+
+    /* Create IOStream */
+    input_  = connection_->get_input_stream();
+    output_ = connection_->get_output_stream();
+
+    /* Monitoring IOStream */
+    input_->read_async(buffer_, 256, sigc::ptr_fun(on_state_changed));
+}
+
+Bras::~Bras() {
+    connection_->close();
+}
+
+Bras *Bras::get() {
+    static Bras instance("127.0.0.1", 10086);
+
+    return &instance;
+}
+
+void Bras::set(const char *username, const char *password) {
+    ustring command = ustring::compose("SET %1 %2\n", username, password);
+    output_->write(command);
+}
+
+void Bras::connect() {
+    output_->write("CONNECT\n");
+}
+
+void Bras::connect(const char *username, const char *password) {
+    set(username, password);
+    Glib::usleep(10000);
+    connect();
+}
+
+void Bras::disconnect() {
+    output_->write("DISCONNECT\n");
+}
+
+void Bras::on_state_changed(Glib::RefPtr<Gio::AsyncResult>& result) {
+    size_t size;
+    if((size = input_->read_finish(result)) <= 0)
+        throw Gio::Error(Gio::Error::CLOSED, "brasd has exited.");
+
+    ustring buffer(buffer_, size - 1);
+
+    /* Get state code from string */
+    State new_state = CRITICAL_ERROR;
+    for(int i = 0; i < COUNT; i++) {
+        if(!buffer.compare(0, state_strings[i].length(), state_strings[i])) {
+            new_state = (State)i;
+            break;
+        }
     }
 
-    int sfd = 0;
-    struct addrinfo *rp;
-    for(rp = result; rp != NULL; rp = rp->ai_next)
-    {
-        sfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-        if(sfd == -1)
-            continue;
+    signal_state_changed.emit(new_state, state_);
+    state_ = new_state;
 
-        if(connect(sfd, rp->ai_addr, rp->ai_addrlen) != -1)
-            break;          /* Success */
-
-        close(sfd);
-    }
-
-    freeaddrinfo(result);
-
-    if(!rp)                 /* No address succeeded */
-    {
-        perror("Could not connect to brasd");
-        close(sfd);
-        return -1;
-    }
-
-    /* disable Nagle algorithm */
-    int v = 1; 
-    setsockopt(sfd, SOL_TCP, TCP_NODELAY, &v, sizeof(v));
-
-    return sfd;
+    input_->read_async(buffer_, 256, sigc::ptr_fun(on_state_changed));
 }
 
-BRAS_STATE read_state(int fd)
-{
-    char buffer[128];
-    if(read(fd, buffer, 128) <= 0)
-        return CLOSED;
-
-    if(strhcmp(buffer, "connected"))
-        return CONNECTED;
-    else if(strhcmp(buffer, "disconnected"))
-        return DISCONNECTED;
-    else if(strhcmp(buffer, "connecting"))
-        return CONNECTING;
-    else if(strhcmp(buffer, "error"))
-        return CRITICAL_ERROR;
-    else if(strhcmp(buffer, "IN USE"))
-        return INUSE;
-    else
-        return CRITICAL_ERROR;
-}
-
-int bras_state(int fd)
-{
-    return write(fd, "STAT\n", 6);
-}
-
-int bras_connect(int fd)
-{
-    return write(fd, "CONNECT\n", 9);
-}
-
-int bras_disconnect(int fd)
-{
-    return write(fd, "DISCONNECT\n", 12);
-}
-
-int bras_set(int fd, const char *username, const char *password)
-{
-    char buffer[128];
-    snprintf(buffer, 128, "SET %s %s\n", username, password);
-
-    return write(fd, buffer, strlen(buffer) + 1);
-}

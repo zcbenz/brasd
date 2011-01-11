@@ -1,23 +1,53 @@
 #ifndef BRAS_H
 #define BRAS_H
 
-enum BRAS_STATE
-{
-    CONNECTED,
-    CONNECTING,
-    DISCONNECTED,
-    CRITICAL_ERROR,
-    CLOSED,
-    INUSE,
-    STATES_COUNT
+#include <sigc++/signal.h>
+
+#include <glibmm/refptr.h>
+#include <glibmm/iochannel.h>
+
+/* Forward declaration */
+namespace Gio {
+    class SocketConnection;
+    class InputStream;
+    class OutputStream;
+    class AsyncResult;
+}
+
+class Bras {
+public:
+    enum State {
+        CONNECTED,
+        CONNECTING,
+        DISCONNECTED,
+        CRITICAL_ERROR,
+        CLOSED,
+        INUSE,
+        COUNT
+    };
+
+    static Bras *get();
+    static void set(const char *username, const char *password);
+    static void connect();
+    static void connect(const char *username, const char *password);
+    static void disconnect();
+    static State get_state() { return state_; }
+
+    static sigc::signal<void, State, State> signal_state_changed;
+
+private:
+    Bras (const char *domain, int port);
+    Bras (const Bras&){}
+    ~Bras();
+
+    static const Glib::ustring state_strings[COUNT];
+    static void on_state_changed(Glib::RefPtr<Gio::AsyncResult>&);
+
+    static State state_;
+    static char buffer_[256];
+    static Glib::RefPtr<Gio::SocketConnection> connection_;
+    static Glib::RefPtr<Gio::InputStream> input_;
+    static Glib::RefPtr<Gio::OutputStream> output_;
 };
-
-int init_socket(const char *node, const char *port);
-
-BRAS_STATE read_state(int fd);  /* read state when socket is ready */
-int bras_state(int fd);   /* get state by sending STAT */
-int bras_connect(int fd);
-int bras_disconnect(int fd);
-int bras_set(int fd, const char *username, const char *password);
 
 #endif /* end of BRAS_H */

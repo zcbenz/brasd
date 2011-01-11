@@ -10,12 +10,14 @@ namespace Gtk {
     class Button;
 }
 
-class LoginDlg
-{
+class Bras;
+
+class LoginDlg {
 public:
-    LoginDlg(int bras);
+    LoginDlg();
 
     void show();
+    void hide();
 
     /* emitted when login */
     sigc::signal<void> signal_login;
@@ -32,7 +34,7 @@ private:
     Gtk::ComboBoxEntry *entry_username_;
     Gtk::Entry *entry_password_;
 
-    int bras_;
+    Bras *bras_;
 };
 
 #endif

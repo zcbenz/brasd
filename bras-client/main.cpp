@@ -1,18 +1,20 @@
 #include "main.h"
 
 /* global values */
-static int bras;
-static BRAS_STATE state;
 static Gtk::MessageDialog *cur_dlg = NULL;
 static sigc::connection *con_response = NULL;
+static LoginDlg *logindlg = NULL;
 
 int main(int argc, char *argv[])
 {
     Gtk::Main kit (argc, argv);
 
-    bras = init_socket("127.0.0.1", "10086");
-    if(bras < 0) {
-        Gtk::MessageDialog msg("brasd has not been started", false,
+    Bras *bras;
+
+    try {
+        bras = Bras::get();
+    } catch (Glib::Exception& error) {
+        Gtk::MessageDialog msg(error.what(), false,
                                Gtk::MESSAGE_ERROR,
                                Gtk::BUTTONS_OK,
                                true);
@@ -20,10 +22,20 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    Glib::signal_io().connect(sigc::ptr_fun(on_bras_state_change),
-                              bras, Glib::IO_IN);
+    bras->signal_state_changed.connect(sigc::ptr_fun(on_bras_state_change));
 
     kit.run();
+}
+
+inline void hide_current_dialog() {
+    if(cur_dlg) { /* hide current dialog */
+        delete cur_dlg;
+        cur_dlg = NULL;
+    }
+    
+    if (logindlg) {
+        logindlg->hide();
+    }
 }
 
 inline Gtk::MessageDialog *create_dialog(const Glib::ustring& message,
@@ -36,15 +48,18 @@ inline Gtk::MessageDialog *create_dialog(const Glib::ustring& message,
     return cur_dlg;
 }
 
-static bool on_bras_state_change(Glib::IOCondition) {
-    static BRAS_STATE last_state = CONNECTED;
+inline LoginDlg *create_login_dialog() {
+    static LoginDlg dlg;
+    if(!logindlg) logindlg = &dlg;
 
-    state = read_state(bras);
+    logindlg->signal_login.connect(sigc::bind(sigc::ptr_fun(on_dlg_response), Gtk::RESPONSE_CONNECT));
+    logindlg->show();
 
-    if(cur_dlg) { /* hide current dialog */
-        delete cur_dlg;
-        cur_dlg = NULL;
-    }
+    return logindlg;
+}
+
+static void on_bras_state_change(Bras::State state, Bras::State last) {
+    hide_current_dialog();
 
     if(con_response) { /* cancel previous no_response call */
         con_response->disconnect();
@@ -53,14 +68,11 @@ static bool on_bras_state_change(Glib::IOCondition) {
     }
 
     /* call functions of each state */
-    static state_func_t state_funcs[STATES_COUNT] = {
+    static state_func_t state_funcs[Bras::COUNT] = {
         on_connected, on_connecting, on_login, on_error, on_quit, on_using
     };
 
     state_funcs[state] ();
-
-    last_state = state;
-    return true;
 }
 
 static void on_quit() {
@@ -70,11 +82,7 @@ static void on_quit() {
 }
 
 static void on_login() {
-    static LoginDlg dlg(bras);
-    static sigc::connection dummy_vaule(dlg.signal_login.connect(
-        sigc::bind(sigc::ptr_fun(on_dlg_response), Gtk::RESPONSE_CONNECT)));
-
-    dlg.show();
+    create_login_dialog();
 }
 
 static void on_connecting() {
@@ -107,18 +115,19 @@ static void on_error() {
 }
 
 static void on_dlg_response(int response) {
+    Bras *bras = Bras::get();
+
     switch(response) {
         case Gtk::RESPONSE_DISCONNECT:
         case Gtk::RESPONSE_CANCEL:
-            bras_disconnect(bras);
+            bras->disconnect();
             break;
         case Gtk::RESPONSE_CONNECT:
-            bras_connect(bras);
+            bras->connect();
             break;
         case Gtk::RESPONSE_CLOSE:
         case Gtk::RESPONSE_OK:
         case Gtk::RESPONSE_DELETE_EVENT:
-            close(bras);
             exit(0);
     }
 
