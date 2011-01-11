@@ -22,6 +22,7 @@ public:
 
     /* emitted when login */
     sigc::signal<void> signal_login;
+    sigc::signal<void> signal_close;
 
 private:
     void on_login();

@@ -54,6 +54,7 @@ inline LoginDlg *create_login_dialog() {
     if(!logindlg) {
         logindlg = &dlg;
         logindlg->signal_login.connect(sigc::bind(sigc::ptr_fun(on_dlg_response), Gtk::RESPONSE_CONNECT));
+        logindlg->signal_close.connect(sigc::bind(sigc::ptr_fun(on_dlg_response), Gtk::RESPONSE_CLOSE));
     }
 
     logindlg->show();

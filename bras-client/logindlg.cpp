@@ -75,7 +75,7 @@ void LoginDlg::on_login() {
 }
 
 void LoginDlg::on_close() {
-    exit(0);
+    signal_close.emit();
 }
 
 bool LoginDlg::on_delete_event(GdkEventAny*) {
