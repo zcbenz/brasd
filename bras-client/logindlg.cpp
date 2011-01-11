@@ -10,7 +10,7 @@ using Glib::ustring;
 #include "bras.h"
 #include "utils.h"
 
-LoginDlg::LoginDlg(): bras_(Bras::get())
+LoginDlg::LoginDlg(): bras_(Bras::get()), shown_(false)
 {
     /* initialize widgets */
     Glib::RefPtr<Gtk::Builder> builder =
@@ -41,10 +41,12 @@ LoginDlg::LoginDlg(): bras_(Bras::get())
 
 void LoginDlg::show() {
     window_->show();
+    shown_ = true;
 }
 
 void LoginDlg::hide() {
     window_->hide();
+    shown_ = false;
 }
 
 void LoginDlg::on_login() {

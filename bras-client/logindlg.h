@@ -18,6 +18,7 @@ public:
 
     void show();
     void hide();
+    bool is_show() { return shown_; }
 
     /* emitted when login */
     sigc::signal<void> signal_login;
@@ -35,6 +36,7 @@ private:
     Gtk::Entry *entry_password_;
 
     Bras *bras_;
+    bool shown_;
 };
 
 #endif

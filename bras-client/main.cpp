@@ -1,4 +1,5 @@
 #include "main.h"
+#include <stdio.h>
 
 /* global values */
 static Gtk::MessageDialog *cur_dlg = NULL;
@@ -50,9 +51,11 @@ inline Gtk::MessageDialog *create_dialog(const Glib::ustring& message,
 
 inline LoginDlg *create_login_dialog() {
     static LoginDlg dlg;
-    if(!logindlg) logindlg = &dlg;
+    if(!logindlg) {
+        logindlg = &dlg;
+        logindlg->signal_login.connect(sigc::bind(sigc::ptr_fun(on_dlg_response), Gtk::RESPONSE_CONNECT));
+    }
 
-    logindlg->signal_login.connect(sigc::bind(sigc::ptr_fun(on_dlg_response), Gtk::RESPONSE_CONNECT));
     logindlg->show();
 
     return logindlg;
@@ -137,7 +140,7 @@ static void on_dlg_response(int response) {
 }
 
 static bool on_brasd_no_response() {
-    if(!cur_dlg)
+    if(!cur_dlg && (!logindlg || !logindlg->is_show()))
         create_dialog("Waiting for brasd's response...",
                       Gtk::MESSAGE_OTHER,
                       Gtk::BUTTONS_CLOSE)->show();
