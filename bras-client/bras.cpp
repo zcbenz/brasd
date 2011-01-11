@@ -1,62 +1,83 @@
 #include "utils.h"
 #include "bras.h"
 
-#include <iostream>
+#include <stdio.h>
+#include <string.h>
 
-#include <glibmm/ustring.h>
-using Glib::ustring;
+#include <stdexcept>
 
-#include <giomm/error.h>
-#include <giomm/socket.h>
-#include <giomm/socketconnection.h>
-#include <giomm/socketclient.h>
-#include <giomm/inputstream.h>
-#include <giomm/outputstream.h>
+#include <unistd.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/tcp.h>
+#include <netdb.h>
+
+#include <gtkmm/main.h>
+
+int Bras::bras_ = -1;
 Bras::State Bras::state_ = Bras::CONNECTED;
-char Bras::buffer_[256];
 sigc::signal<void, Bras::State, Bras::State> Bras::signal_state_changed;
-Glib::RefPtr<Gio::InputStream> Bras::input_;
-Glib::RefPtr<Gio::OutputStream> Bras::output_;
-Glib::RefPtr<Gio::SocketConnection> Bras::connection_;
 
 /* state code strings */
-const ustring Bras::state_strings[COUNT] = {
+const char *Bras::state_strings[COUNT] = {
     "connected", "connecting", "disconnected", "error", "closed", "IN USE"
 };
 
-Bras::Bras(const char *domain, int port) {
+Bras::Bras(const char *domain, const char *port) {
     /* Connect to brasd */
-    Glib::RefPtr<Gio::SocketClient> client = Gio::SocketClient::create();
+    struct addrinfo hints, *result;
+    bzero(&hints, sizeof(struct addrinfo));
+    hints.ai_family   = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags    = AI_PASSIVE;
 
-    if(!(connection_ = client->connect_to_host(domain, port)))
-        throw Gio::Error(Gio::Error::CONNECTION_REFUSED, "brasd has not been started.");
+    if(getaddrinfo(domain, port, &hints, &result))
+        throw std::runtime_error("Cannot resolve server name");
 
-    /* Create IOStream */
-    input_  = connection_->get_input_stream();
-    output_ = connection_->get_output_stream();
+    struct addrinfo *rp;
+    for(rp = result; rp != NULL; rp = rp->ai_next) {
+        bras_ = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+        if(bras_ == -1)
+            continue;
 
-    /* Monitoring IOStream */
-    input_->read_async(buffer_, 256, sigc::ptr_fun(on_state_changed));
+        if(::connect(bras_, rp->ai_addr, rp->ai_addrlen) != -1)
+            break;          /* Success */
+
+        close(bras_);
+    }
+
+    freeaddrinfo(result);
+
+    if(!rp) {               /* No address succeeded */
+        close(bras_);
+        throw std::runtime_error("Cannot connect to brasd.");
+    }
+
+    /* Monitoring brasd socket */
+    Glib::signal_io().connect(sigc::hide(sigc::ptr_fun(on_state_changed)),
+                              bras_, Glib::IO_IN | Glib::IO_ERR);
 }
 
 Bras::~Bras() {
-    connection_->close();
+    if(bras_ > 0) close(bras_);
 }
 
 Bras *Bras::get() {
-    static Bras instance("127.0.0.1", 10086);
+    static Bras instance("127.0.0.1", "10086");
 
     return &instance;
 }
 
 void Bras::set(const char *username, const char *password) {
-    ustring command = ustring::compose("SET %1 %2\n", username, password);
-    output_->write(command);
+    char buffer[128];
+    snprintf(buffer, 128, "SET %s %s\n", username, password);
+
+    write(buffer);
 }
 
 void Bras::connect() {
-    output_->write("CONNECT\n");
+    write("CONNECT\n");
 }
 
 void Bras::connect(const char *username, const char *password) {
@@ -66,28 +87,38 @@ void Bras::connect(const char *username, const char *password) {
 }
 
 void Bras::disconnect() {
-    output_->write("DISCONNECT\n");
+    write("DISCONNECT\n");
 }
 
-void Bras::on_state_changed(Glib::RefPtr<Gio::AsyncResult>& result) {
-    size_t size;
-    if((size = input_->read_finish(result)) <= 0)
-        throw Gio::Error(Gio::Error::CLOSED, "brasd has exited.");
-
-    ustring buffer(buffer_, size - 1);
+bool Bras::on_state_changed() {
+    char buffer[128];
+    read(buffer, 128);
 
     /* Get state code from string */
     State new_state = CRITICAL_ERROR;
-    for(int i = 0; i < COUNT; i++) {
-        if(!buffer.compare(0, state_strings[i].length(), state_strings[i])) {
+    for(int i = 0; i < COUNT; i++)
+        if(strhcmp(buffer, state_strings[i])) {
             new_state = (State)i;
             break;
         }
-    }
 
-    signal_state_changed.emit(new_state, state_);
-    state_ = new_state;
+    emit_signal(new_state);
 
-    input_->read_async(buffer_, 256, sigc::ptr_fun(on_state_changed));
+    /* don't remove this function */
+    return true;
 }
 
+void Bras::emit_signal(State new_state) {
+    signal_state_changed.emit(new_state, state_);
+    state_ = new_state;
+}
+
+void Bras::write(const char *str) {
+    if(::write(bras_, str, strlen(str) + 1) <= 0)
+        emit_signal(CLOSED);
+}
+
+void Bras::read(char *buffer, size_t size) {
+    if(::read(bras_, buffer, size) <= 0)
+        emit_signal(CLOSED);
+}

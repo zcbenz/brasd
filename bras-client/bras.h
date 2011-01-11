@@ -3,17 +3,6 @@
 
 #include <sigc++/signal.h>
 
-#include <glibmm/refptr.h>
-#include <glibmm/iochannel.h>
-
-/* Forward declaration */
-namespace Gio {
-    class SocketConnection;
-    class InputStream;
-    class OutputStream;
-    class AsyncResult;
-}
-
 class Bras {
 public:
     enum State {
@@ -36,18 +25,20 @@ public:
     static sigc::signal<void, State, State> signal_state_changed;
 
 private:
-    Bras (const char *domain, int port);
+    Bras (const char *domain, const char *port);
     Bras (const Bras&){}
     ~Bras();
 
-    static const Glib::ustring state_strings[COUNT];
-    static void on_state_changed(Glib::RefPtr<Gio::AsyncResult>&);
+    static const char *state_strings[COUNT];
+    static bool on_state_changed();
+    static void emit_signal(State);
+
+    /* wrap original calls so if failed then emit CLOSED signal */
+    static void write(const char*);
+    static void read(char*, size_t);
 
     static State state_;
-    static char buffer_[256];
-    static Glib::RefPtr<Gio::SocketConnection> connection_;
-    static Glib::RefPtr<Gio::InputStream> input_;
-    static Glib::RefPtr<Gio::OutputStream> output_;
+    static int bras_;
 };
 
 #endif /* end of BRAS_H */
