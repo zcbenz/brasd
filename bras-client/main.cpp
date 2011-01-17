@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
                                Gtk::BUTTONS_OK,
                                true);
         msg.run();
-        exit(EXIT_FAILURE);
+        Gtk::Main::quit();
     }
 
     bras->signal_state_changed.connect(sigc::ptr_fun(on_bras_state_change));
@@ -132,7 +132,7 @@ static void on_dlg_response(int response) {
         case Gtk::RESPONSE_CLOSE:
         case Gtk::RESPONSE_OK:
         case Gtk::RESPONSE_DELETE_EVENT:
-            exit(0);
+            Gtk::Main::quit();
     }
 
     /* if not receive state in 100ms, show no_response dialog */
