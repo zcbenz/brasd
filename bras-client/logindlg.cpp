@@ -9,6 +9,7 @@ using Glib::ustring;
 #include "logindlg.h"
 #include "bras.h"
 #include "utils.h"
+#include "options.h"
 
 LoginDlg::LoginDlg(): bras_(Bras::get()), shown_(false)
 {
@@ -32,11 +33,9 @@ LoginDlg::LoginDlg(): bras_(Bras::get()), shown_(false)
     window_->set_icon_from_file(UI_DIR "/bras-client.png");
 
     /* set username and password to previously saved one */
-    config_t config;
-    if(!read_config(&config)) {
-        entry_username_->get_entry()->set_text(config.username);
-        entry_password_->set_text(config.password);
-    }
+    Options *options = Options::get();
+    entry_username_->get_entry()->set_text(options->get_username());
+    entry_password_->set_text(options->get_password());
 }
 
 void LoginDlg::show() {
@@ -63,10 +62,12 @@ void LoginDlg::on_login() {
 
     bras_->set(username.c_str(), password.c_str());
 
-    config_t config;
-    strcpy(config.username, username.c_str());
-    strcpy(config.password, password.c_str());
-    write_config(&config);
+    /* save the username and password */
+    Options *options = Options::get();
+    options->add_passwd(username, password);
+
+    /* set current username */
+    options->set_curt(username);
 
     window_->hide();
 

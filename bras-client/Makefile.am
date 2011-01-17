@@ -7,6 +7,8 @@ bras_client_SOURCES = \
 	main.h \
 	bras.cpp \
 	bras.h \
+	options.h \
+	options.cpp \
 	utils.h \
 	utils.cpp \
 	logindlg.cpp \

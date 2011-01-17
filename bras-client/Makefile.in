@@ -46,8 +46,8 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_bras_client_OBJECTS = bras_client-main.$(OBJEXT) \
-	bras_client-bras.$(OBJEXT) bras_client-utils.$(OBJEXT) \
-	bras_client-logindlg.$(OBJEXT)
+	bras_client-bras.$(OBJEXT) bras_client-options.$(OBJEXT) \
+	bras_client-utils.$(OBJEXT) bras_client-logindlg.$(OBJEXT)
 bras_client_OBJECTS = $(am_bras_client_OBJECTS)
 am__DEPENDENCIES_1 =
 bras_client_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -214,6 +214,8 @@ bras_client_SOURCES = \
 	main.h \
 	bras.cpp \
 	bras.h \
+	options.h \
+	options.cpp \
 	utils.h \
 	utils.cpp \
 	logindlg.cpp \
@@ -308,6 +310,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bras_client-bras.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bras_client-logindlg.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bras_client-main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bras_client-options.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bras_client-utils.Po@am__quote@
 
 .cpp.o:
@@ -351,6 +354,20 @@ bras_client-bras.obj: bras.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='bras.cpp' object='bras_client-bras.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bras_client_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o bras_client-bras.obj `if test -f 'bras.cpp'; then $(CYGPATH_W) 'bras.cpp'; else $(CYGPATH_W) '$(srcdir)/bras.cpp'; fi`
+
+bras_client-options.o: options.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bras_client_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT bras_client-options.o -MD -MP -MF $(DEPDIR)/bras_client-options.Tpo -c -o bras_client-options.o `test -f 'options.cpp' || echo '$(srcdir)/'`options.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/bras_client-options.Tpo $(DEPDIR)/bras_client-options.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='options.cpp' object='bras_client-options.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bras_client_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o bras_client-options.o `test -f 'options.cpp' || echo '$(srcdir)/'`options.cpp
+
+bras_client-options.obj: options.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bras_client_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT bras_client-options.obj -MD -MP -MF $(DEPDIR)/bras_client-options.Tpo -c -o bras_client-options.obj `if test -f 'options.cpp'; then $(CYGPATH_W) 'options.cpp'; else $(CYGPATH_W) '$(srcdir)/options.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/bras_client-options.Tpo $(DEPDIR)/bras_client-options.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='options.cpp' object='bras_client-options.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bras_client_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o bras_client-options.obj `if test -f 'options.cpp'; then $(CYGPATH_W) 'options.cpp'; else $(CYGPATH_W) '$(srcdir)/options.cpp'; fi`
 
 bras_client-utils.o: utils.cpp
 @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bras_client_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT bras_client-utils.o -MD -MP -MF $(DEPDIR)/bras_client-utils.Tpo -c -o bras_client-utils.o `test -f 'utils.cpp' || echo '$(srcdir)/'`utils.cpp
