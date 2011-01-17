@@ -2,6 +2,8 @@ brasd (0.1.2-1ubuntu1) lucid; urgency=low
 
   * Rewrote many parts of bras-client, codes are more C++ standarded
 
+ -- Zhao Cheng <zcbenz@gmail.com>  Mon, 17 Jan 2011 19:45:05 +0800
+
 brasd (0.1.1-1ubuntu1) lucid; urgency=low
 
   * Will show a no_response dialog when brasd didn't response
