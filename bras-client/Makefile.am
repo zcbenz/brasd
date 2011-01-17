@@ -9,8 +9,6 @@ bras_client_SOURCES = \
 	bras.h \
 	options.h \
 	options.cpp \
-	utils.h \
-	utils.cpp \
 	logindlg.cpp \
 	logindlg.h
 

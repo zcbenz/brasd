@@ -1,4 +1,3 @@
-#include "utils.h"
 #include "bras.h"
 
 #include <stdio.h>
@@ -97,7 +96,7 @@ bool Bras::on_state_changed() {
     /* Get state code from string */
     State new_state = CRITICAL_ERROR;
     for(int i = 0; i < COUNT; i++)
-        if(strhcmp(buffer, state_strings[i])) {
+        if(Glib::str_has_prefix(buffer, state_strings[i])) {
             new_state = (State)i;
             break;
         }

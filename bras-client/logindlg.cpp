@@ -8,7 +8,6 @@ using Glib::ustring;
 
 #include "logindlg.h"
 #include "bras.h"
-#include "utils.h"
 #include "options.h"
 
 LoginDlg::LoginDlg(): bras_(Bras::get()), shown_(false)
