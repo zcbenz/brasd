@@ -98,7 +98,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkComboBox" id="username">
+                      <object class="GtkComboBoxEntry" id="username">
                         <property name="visible">True</property>
                       </object>
                       <packing>

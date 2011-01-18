@@ -19,6 +19,7 @@ public:
 
     static iterator begin() { return passwords_.begin(); }
     static iterator end() { return passwords_.end(); }
+    static iterator find(const Glib::ustring& username) { return passwords_.find(username); }
 
 private:
     Options();

@@ -2,7 +2,7 @@
 #include <gtkmm/window.h>
 #include <gtkmm/button.h>
 #include <gtkmm/entry.h>
-#include <gtkmm/combobox.h>
+#include <gtkmm/comboboxentry.h>
 using sigc::mem_fun;
 using Glib::ustring;
 
@@ -27,15 +27,14 @@ LoginDlg::LoginDlg(): bras_(Bras::get()), shown_(false)
 
     /* set username combobox */
     entry_username_->set_model(tree_model_);
-    entry_username_->pack_start(columns_.username_);
-
-    /* add stored usernames */
+    entry_username_->set_text_column(columns_.username_);
 
     /* connect signals */
     button_ok_->signal_clicked().connect(mem_fun(*this, &LoginDlg::on_login));
     button_close_->signal_clicked().connect(mem_fun(*this, &LoginDlg::on_close));
     window_->signal_delete_event().connect(mem_fun(*this, &LoginDlg::on_delete_event));
-//    entry_username_->get_entry()->signal_activate().connect(mem_fun(*this, &LoginDlg::on_login));
+    entry_username_->get_entry()->signal_activate().connect(mem_fun(*this, &LoginDlg::on_login));
+    entry_username_->signal_changed().connect(mem_fun(*this, &LoginDlg::on_username_changed));
     entry_password_->signal_activate().connect(mem_fun(*this, &LoginDlg::on_login));
 
     /* set window icon */
@@ -43,8 +42,13 @@ LoginDlg::LoginDlg(): bras_(Bras::get()), shown_(false)
 
     /* set username and password to previously saved one */
     Options *options = Options::get();
-//    entry_username_->get_entry()->set_text(options->get_username());
+    entry_username_->get_entry()->set_text(options->get_username());
     entry_password_->set_text(options->get_password());
+
+    /* add stored usernames */
+    for(Options::const_iterator it = options->begin();
+        it != options->end(); add_column(it->first), ++it)
+        ;
 }
 
 void LoginDlg::show() {
@@ -57,8 +61,13 @@ void LoginDlg::hide() {
     shown_ = false;
 }
 
+void LoginDlg::add_column(const Glib::ustring& username) {
+    Gtk::TreeModel::Row row = *(tree_model_->append());
+    row[columns_.username_] = username;
+}
+
 void LoginDlg::on_login() {
-    ustring username; //= entry_username_->get_active_text();
+    ustring username = entry_username_->get_active_text();
     ustring password = entry_password_->get_text();
 
     if(username.empty()) {
@@ -69,13 +78,18 @@ void LoginDlg::on_login() {
         return;
     }
 
-    bras_->set(username.c_str(), password.c_str());
-
     /* save the username and password */
     if(button_remember_->get_active()) {
         Options *options = Options::get();
+
+        /* append it in column if not added before */
+        if(options->find(username) == options->end())
+            add_column(username);
+
         options->add_passwd(username, password);
     }
+
+    bras_->set(username.c_str(), password.c_str());
 
     window_->hide();
 
@@ -91,4 +105,15 @@ bool LoginDlg::on_delete_event(GdkEventAny*) {
     on_close();
 
     return false;
+}
+
+void LoginDlg::on_username_changed() {
+    ustring username = entry_username_->get_active_text();
+
+    /* peek stored password */
+    Options *options = Options::get();
+    Options::const_iterator it = options->find(username);
+    if(it != options->end())
+        /* change password */
+        entry_password_->set_text(it->second);
 }
