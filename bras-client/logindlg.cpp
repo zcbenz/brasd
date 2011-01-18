@@ -22,6 +22,15 @@ LoginDlg::LoginDlg(): bras_(Bras::get()), shown_(false)
     builder->get_widget("username" , entry_username_);
     builder->get_widget("password" , entry_password_);
 
+    /* create tree model */
+    tree_model_ = Gtk::ListStore::create(columns_);
+
+    /* set username combobox */
+    entry_username_->set_model(tree_model_);
+    entry_username_->pack_start(columns_.username_);
+
+    /* add stored usernames */
+
     /* connect signals */
     button_ok_->signal_clicked().connect(mem_fun(*this, &LoginDlg::on_login));
     button_close_->signal_clicked().connect(mem_fun(*this, &LoginDlg::on_close));
@@ -34,12 +43,12 @@ LoginDlg::LoginDlg(): bras_(Bras::get()), shown_(false)
 
     /* set username and password to previously saved one */
     Options *options = Options::get();
-    entry_username_->get_entry()->set_text(options->get_username());
+//    entry_username_->get_entry()->set_text(options->get_username());
     entry_password_->set_text(options->get_password());
 }
 
 void LoginDlg::show() {
-    window_->show();
+    window_->show_all();
     shown_ = true;
 }
 
@@ -49,7 +58,7 @@ void LoginDlg::hide() {
 }
 
 void LoginDlg::on_login() {
-    ustring username = entry_username_->get_active_text();
+    ustring username; //= entry_username_->get_active_text();
     ustring password = entry_password_->get_text();
 
     if(username.empty()) {

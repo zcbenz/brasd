@@ -1,6 +1,7 @@
 #ifndef LOGINDLG_H
 #define LOGINDLG_H
 
+#include <gtkmm/liststore.h>
 #include <sigc++/signal.h>
 
 namespace Gtk {
@@ -24,6 +25,17 @@ public:
     /* emitted when login */
     sigc::signal<void> signal_login;
     sigc::signal<void> signal_close;
+
+protected:
+    class ModelColumns: public Gtk::TreeModel::ColumnRecord {
+    public:
+        ModelColumns() { add(username_); }
+
+        Gtk::TreeModelColumn<Glib::ustring> username_;
+    };
+
+    ModelColumns columns_;
+    Glib::RefPtr<Gtk::ListStore> tree_model_;
 
 private:
     void on_login();
