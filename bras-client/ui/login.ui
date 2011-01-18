@@ -70,24 +70,12 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkComboBoxEntry" id="username">
-                        <property name="visible">True</property>
-                      </object>
-                      <packing>
-                        <property name="left_attach">1</property>
-                        <property name="right_attach">2</property>
-                        <property name="y_options">GTK_FILL</property>
-                      </packing>
-                    </child>
-                    <child>
                       <object class="GtkAccelLabel" id="accellabel1">
                         <property name="width_request">90</property>
                         <property name="visible">True</property>
                         <property name="xalign">0</property>
                         <property name="label" translatable="yes">_Username</property>
                         <property name="use_underline">True</property>
-                        <property name="mnemonic_widget">username</property>
-                        <property name="accel_widget">username</property>
                       </object>
                       <packing>
                         <property name="x_options"></property>
@@ -109,11 +97,36 @@
                         <property name="x_options"></property>
                       </packing>
                     </child>
+                    <child>
+                      <object class="GtkComboBox" id="username">
+                        <property name="visible">True</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="right_attach">2</property>
+                        <property name="y_options">GTK_FILL</property>
+                      </packing>
+                    </child>
                   </object>
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">False</property>
                     <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkCheckButton" id="remember">
+                    <property name="label" translatable="yes">_Remember password and username</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
+                    <property name="use_underline">True</property>
+                    <property name="active">True</property>
+                    <property name="draw_indicator">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="position">2</property>
                   </packing>
                 </child>
                 <child>
@@ -154,7 +167,7 @@
                   <packing>
                     <property name="expand">False</property>
                     <property name="padding">10</property>
-                    <property name="position">2</property>
+                    <property name="position">3</property>
                   </packing>
                 </child>
               </object>

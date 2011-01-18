@@ -5,9 +5,10 @@
 
 namespace Gtk {
     class Window;
-    class ComboBoxEntry;
+    class ComboBox;
     class Entry;
     class Button;
+    class CheckButton;
 }
 
 class Bras;
@@ -33,7 +34,8 @@ private:
     Gtk::Window *window_;
     Gtk::Button *button_ok_;
     Gtk::Button *button_close_;
-    Gtk::ComboBoxEntry *entry_username_;
+    Gtk::CheckButton *button_remember_;
+    Gtk::ComboBox *entry_username_;
     Gtk::Entry *entry_password_;
 
     Bras *bras_;
