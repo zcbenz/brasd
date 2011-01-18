@@ -1,2 +1,2 @@
-# bzr-builder format 0.2 deb-version {debupstream}-0~{revno}
+# bzr-builder format 0.2 deb-version {debupstream}-{revno}
 lp:brasd
