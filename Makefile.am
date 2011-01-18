@@ -3,7 +3,7 @@ DIST_SUBDIRS = src data bras-client debian
 
 EXTRA_DIST = brasd.init \
 			 ANNOUCEMENT README README.chinese TODO CREDITS BUGS Changelog \
-			 mkdeb mkppa \
+			 mkdeb mkppa brasd.recipe\
 			 packaging
 
 install-service:
