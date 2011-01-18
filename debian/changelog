@@ -1,3 +1,15 @@
+brasd (0.1.2-1ubuntu3) maverick; urgency=low
+
+  * Force ppa upgrade
+
+ -- Zhao Cheng <zcbenz@gmail.com>  Tue, 18 Jan 2011 11:24:19 +0800
+
+brasd (0.1.2-1ubuntu2) maverick; urgency=low
+
+  * Change ppa to maverick
+
+ -- Zhao Cheng <zcbenz@gmail.com>  Tue, 18 Jan 2011 10:16:01 +0800
+
 brasd (0.1.2-1ubuntu1) lucid; urgency=low
 
   * Rewrote many parts of bras-client, codes are more C++ standarded
