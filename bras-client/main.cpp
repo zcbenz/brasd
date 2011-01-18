@@ -6,8 +6,7 @@ static Gtk::MessageDialog *cur_dlg = NULL;
 static sigc::connection *con_response = NULL;
 static LoginDlg *logindlg = NULL;
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     Gtk::Main kit (argc, argv);
 
     Bras *bras;
