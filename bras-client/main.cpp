@@ -13,13 +13,13 @@ int main(int argc, char *argv[]) {
 
     try {
         bras = Bras::get();
-    } catch (Glib::Exception& error) {
+    } catch (std::exception& error) {
         Gtk::MessageDialog msg(error.what(), false,
                                Gtk::MESSAGE_ERROR,
                                Gtk::BUTTONS_OK,
                                true);
         msg.run();
-        Gtk::Main::quit();
+        return 0; /* We have not enter main loop, so don't use Gtk::Main::Quit */
     }
 
     bras->signal_state_changed.connect(sigc::ptr_fun(on_bras_state_change));

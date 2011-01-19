@@ -81,6 +81,7 @@ int main(int argc, char *argv[]) {
     /* use sigalarm to delay sending CONNECTED state */
     signal(SIGALRM, on_send_success);
 
+    /* enter loop */
     event_dispatch();
     wait(NULL);
 
@@ -92,8 +93,7 @@ void kill_xl2tpd() {
 }
 
 /* start xl2tpd and redirect its output */
-pid_t init_xl2tpd(int *out, int *err)
-{
+pid_t init_xl2tpd(int *out, int *err) {
     /* check if /var/run/xl2tpd exists */
     struct stat buf;
     if(stat("/var/run/xl2tpd/l2tp-control", &buf))
@@ -109,16 +109,14 @@ pid_t init_xl2tpd(int *out, int *err)
         goto err_out;
 
     pid = fork();
-    if(pid > 0)
-    {
+    if(pid > 0) {
         close(fd_err[1]);
         close(fd_out[1]);
 
         *err = fd_err[0];
         *out = fd_out[0];
     }
-    else if (pid == 0)
-    {
+    else if (pid == 0) {
         close(fd_err[0]);
         close(fd_out[0]);
         dup2(fd_out[1], 1);
@@ -145,14 +143,12 @@ err_err:
 }
 
 /* called when there is new output of xl2tpd */
-void on_out(int fd, short event, void *arg)
-{
+void on_out(int fd, short event, void *arg) {
     char buffer[512] = { 0 };
     size_t len;
     if((len = read(fd, buffer, 512)) > 0)
         breakdown_output(buffer, len);
-    else
-    {
+    else {
         if(debug) fputs("l2tpd ended\n", stderr);
         close(fd);
         exit(EXIT_SUCCESS);
@@ -162,15 +158,13 @@ void on_out(int fd, short event, void *arg)
 }
 
 /* break down output of xl2tpd into commands */
-void breakdown_output(const char *output, size_t length)
-{
+void breakdown_output(const char *output, size_t length) {
     /* turn string into file stream */
     FILE *f_pipe = fmemopen((void*)output, length, "r");
 
     char buffer[128];
     int ret, pid;
-    while((ret = fscanf(f_pipe, "xl2tpd[%d]: ", &pid)) != EOF)
-    {
+    while((ret = fscanf(f_pipe, "xl2tpd[%d]: ", &pid)) != EOF) {
         if(ret != 1) continue;
         if(!fgets(buffer, 128, f_pipe)) break;
         translate(buffer);
@@ -178,8 +172,7 @@ void breakdown_output(const char *output, size_t length)
 }
 
 /* get state from xl2tpd's output */
-void translate(const char *output)
-{
+void translate(const char *output) {
     if(strhcmp(output, "start_pppd")) {
         /* start_pppd doesn't mean auth is ok,
          * so if we do not get call_close in one second, 
