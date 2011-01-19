@@ -1,4 +1,5 @@
 2011-1-17 Zhao Cheng <zcbenz@gmail.com>
+
 	* Rewrote many parts of bras-client, codes are more C++ standarded
 
 2010-12-28 Zhao Cheng <zcbenz@gmail.com>

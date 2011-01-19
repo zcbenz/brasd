@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
 }
 
 void kill_xl2tpd() {
-    pclose(popen("killall -9 xl2tpd", "r"));
+    pclose(popen("killall -9 xl2tpd > /dev/null 2>&1", "r"));
 }
 
 /* start xl2tpd and redirect its output */

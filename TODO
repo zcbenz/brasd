@@ -1,3 +1,8 @@
-1.让bras-client能够记住多个账号
-2.增加bras-indicator，用于在托盘区显出BRAS状态，并提供连接/断线/多账号切换
-  等功能
+brasd同时处理多个客户端
+
+brasd增加选项，控制是否接受网络控制
+
+bras-client在brasd未启动时提示启动brasd
+
+增加bras-indicator，用于在托盘区显出BRAS状态，并提供连接/断线/多账号切换
+等功能
