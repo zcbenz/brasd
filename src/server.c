@@ -91,7 +91,7 @@ void server_callback(int fd, short event, void *arg)
     /* only allow one connection one time */
     if(cfd > 0)
     {
-        int tmp = write(new_cfd, "IN USE", 7);
+        int tmp = write(new_cfd, "IN USE\n", 8);
         (void) tmp; /* suppress warnings */
         close(new_cfd);
         return;

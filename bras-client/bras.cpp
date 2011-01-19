@@ -17,6 +17,7 @@
 int Bras::bras_ = -1;
 Bras::State Bras::state_ = Bras::CONNECTED;
 sigc::signal<void, Bras::State, Bras::State> Bras::signal_state_changed;
+sigc::connection Bras::connection_io_;
 
 /* state code strings */
 const char *Bras::state_strings[COUNT] = {
@@ -43,29 +44,38 @@ Bras::Bras(const char *domain, const char *port) {
         if(::connect(bras_, rp->ai_addr, rp->ai_addrlen) != -1)
             break;          /* Success */
 
-        close(bras_);
+        ::close(bras_);
     }
 
     freeaddrinfo(result);
 
     if(!rp) {               /* No address succeeded */
-        close(bras_);
+        ::close(bras_);
         throw std::runtime_error("Cannot connect to brasd.");
     }
 
     /* Monitoring brasd socket */
-    Glib::signal_io().connect(sigc::hide(sigc::ptr_fun(on_state_changed)),
-                              bras_, Glib::IO_IN | Glib::IO_ERR);
+    connection_io_ = Glib::signal_io().connect(sigc::hide(sigc::ptr_fun(on_state_changed)),
+                                               bras_, Glib::IO_IN | Glib::IO_ERR);
 }
 
 Bras::~Bras() {
-    if(bras_ > 0) close(bras_);
+    close();
 }
 
 Bras *Bras::get() {
     static Bras instance("127.0.0.1", "10086");
 
     return &instance;
+}
+
+void Bras::close() {
+    if(bras_ > 0) {
+        connection_io_.disconnect();
+
+        ::close(bras_);
+        bras_ = -1;
+    }
 }
 
 void Bras::set(const char *username, const char *password) {
@@ -102,6 +112,10 @@ bool Bras::on_state_changed() {
         }
 
     emit_signal(new_state);
+
+    /* close bras after some signals */
+    if(new_state == CRITICAL_ERROR || new_state == CLOSED || new_state == INUSE)
+        close();
 
     /* don't remove this function */
     return true;

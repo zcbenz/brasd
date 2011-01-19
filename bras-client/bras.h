@@ -2,6 +2,7 @@
 #define BRAS_H
 
 #include <sigc++/signal.h>
+#include <sigc++/connection.h>
 
 class Bras {
 public:
@@ -16,6 +17,7 @@ public:
     };
 
     static Bras *get();
+    static void close();
     static void set(const char *username, const char *password);
     static void connect();
     static void connect(const char *username, const char *password);
@@ -39,6 +41,7 @@ private:
 
     static State state_;
     static int bras_;
+    static sigc::connection connection_io_;
 };
 
 #endif /* end of BRAS_H */
