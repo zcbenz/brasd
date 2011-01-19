@@ -32,7 +32,7 @@ Options::Options() {
         if(buffer[0] == '#')
             continue;
         /* get stored passwords */
-        else if(sscanf(buffer, "auth %255s %255s", username, password) == 2)
+        else if(sscanf(buffer, "pair %255s %255s", username, password) == 2)
             passwords_[ustring(username)] = ustring(password);
         /* get current username */
         else if(sscanf(buffer, "curt %255s", username) == 1)
@@ -70,7 +70,7 @@ Options::~Options() {
         it != passwords_.end(); ++it)
     {
         if(!it->first.empty() && !it->second.empty())
-            fprintf(file, "auth %s %s\n", it->first.c_str(), it->second.c_str());
+            fprintf(file, "pair %s %s\n", it->first.c_str(), it->second.c_str());
     }
 
     fclose(file);
@@ -83,3 +83,17 @@ Options *Options::get() {
     return &instance;
 }
 
+Glib::ustring Options::encode(const Glib::ustring& str) {
+    char *buffer = g_base64_encode((const guchar*)str.c_str(), str.length() + 1);
+    Glib::ustring ret(buffer);
+    g_free(buffer);
+    return ret;
+}
+
+Glib::ustring Options::decode(const Glib::ustring& str) {
+    gsize size;
+    char *buffer = (char *)g_base64_decode((const gchar*)str.c_str(), &size);
+    Glib::ustring ret(buffer);
+    g_free(buffer);
+    return ret;
+}

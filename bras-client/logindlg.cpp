@@ -102,6 +102,8 @@ void LoginDlg::on_login() {
     }
 
     bras_->set(username.c_str(), password.c_str());
+    puts(password.c_str());
+    fflush(stdout);
 
     window_->hide();
 
