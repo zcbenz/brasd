@@ -13,7 +13,7 @@ public:
     typedef Passwords::const_iterator const_iterator;
 
     static Glib::ustring get_username() { return curt_; }
-    static Glib::ustring get_password() { return get_password(curt_); }
+    static Glib::ustring get_password() { if(curt_.empty()) return ""; else return get_password(curt_); }
     static Glib::ustring get_password(const Glib::ustring& username) { return passwords_[username]; }
     static void set(const Glib::ustring& username) { curt_ = username; }
     static void add_passwd(const Glib::ustring& username, const Glib::ustring& password) { passwords_[username] = password; curt_ = username; }
