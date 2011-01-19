@@ -17,7 +17,7 @@
 #include "utils.h"
 
 enum BRAS_STATE state;
-int xl2tpd_fd, sfd;
+int xl2tpd_pid, server_fd;
 int debug = 0;
 
 void kill_xl2tpd();
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
 
     /* start xl2tpd and hold the stdout of xl2tpd */
     int l2tp_out, l2tp_err; /* file descriptors of pipe */
-    if((xl2tpd_fd = init_xl2tpd(&l2tp_out, &l2tp_err)) < 0) {
+    if((xl2tpd_pid = init_xl2tpd(&l2tp_out, &l2tp_err)) < 0) {
         fputs("Cannot start xl2tpd", stderr);
         exit(EXIT_FAILURE);
     }
@@ -55,10 +55,9 @@ int main(int argc, char *argv[]) {
     state = DISCONNECTED;
 
     /* init server */
-    if((sfd = init_server("127.0.0.1", "10086")) < 0)
-    {
+    if((server_fd = init_server("127.0.0.1", "10086")) < 0) {
         fputs("Cannot init server, brasd already runs?\n", stderr);
-        kill(xl2tpd_fd, SIGKILL);
+        kill(xl2tpd_pid, SIGKILL);
         exit(EXIT_FAILURE);
     }
 
@@ -67,19 +66,17 @@ int main(int argc, char *argv[]) {
     /* kill xl2tpd when quit */
     signal(SIGINT, handle_interupt);
 
+    /* init libevent */
     struct event ev_out, ev_err, ev_server;
     event_init();
 
     /* use libevent to listen on pipe */
     event_set(&ev_err, l2tp_err, EV_READ, on_out, &ev_err);
     event_set(&ev_out, l2tp_out, EV_READ, on_out, &ev_out);
+    event_set(&ev_server, server_fd, EV_READ, server_callback, &ev_server);
     event_add(&ev_err, NULL);
     event_add(&ev_out, NULL);
-    if(sfd > 0)
-    {
-        event_set(&ev_server, sfd, EV_READ, server_callback, &ev_server);
-        event_add(&ev_server, NULL);
-    }
+    event_add(&ev_server, NULL);
 
     /* use sigalarm to delay sending CONNECTED state */
     signal(SIGALRM, on_send_success);
@@ -230,7 +227,7 @@ void translate(const char *output)
 static void handle_interupt(int signum) {
     if(state == CONNECTED) bras_disconnect();
     usleep(100000);
-    kill(xl2tpd_fd, SIGKILL);
+    kill(xl2tpd_pid, SIGKILL);
 }
 
 static void on_send_success(int sig) {
