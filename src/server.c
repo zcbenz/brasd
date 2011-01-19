@@ -89,13 +89,13 @@ void server_callback(int fd, short event, void *arg) {
 
 	struct node *client = list_append(client_list, client_fd);
 
-    post_state();
+    broadcast_state();
 
     event_set(&client->event, client->fd, EV_READ, client_callback, &client->event);
     event_add(&client->event, NULL);
 }
 
-void post_state() {
+void broadcast_state() {
 	struct node *it = client_list->next;
 	while(it) {
 		if(write(it->fd, description[state], strlen(description[state])) <= 0)
@@ -110,7 +110,7 @@ static void client_callback(int fd, short event, void *arg) {
     int len;
     if((len = read(fd, buffer, 512)) > 0) {
         if(strhcmp(buffer, "STAT"))
-            post_state();
+            broadcast_state();
         else if(strhcmp(buffer, "CONNECT")) {
             bras_connect();
         } else if(strhcmp(buffer, "DISCONNECT")) {

@@ -180,7 +180,7 @@ void translate(const char *output) {
     }
     else if (strhcmp(output, "Connecting to host")) {
         state = CONNECTING;
-        post_state();
+        broadcast_state();
     }
     else if (strhcmp(output, "Maximum retries exceeded")) {
         bras_disconnect();
@@ -194,14 +194,14 @@ void translate(const char *output) {
             notify_send("BRAS", "BRAS disconnected", "notification-network-wireless-disconnected");
 
         state = DISCONNECTED;
-        post_state();
+        broadcast_state();
     }
     else if (strhcmp(output, "call_close:")) {
         alarm(0); /* unschedule sending CONNECTED */
 
         state = DISCONNECTED;
         bras_disconnect(); /* when invalid auth disconnect */
-        post_state();
+        broadcast_state();
         puts("Username or password wrong?");
     }
     else if (strhcmp(output, "init_network")) {
@@ -227,6 +227,6 @@ static void on_send_success(int sig) {
 
     state = CONNECTED;
     notify_send("BRAS", "You have connected to BRAS", "notification-network-wireless-full");
-    post_state();
+    broadcast_state();
 }
 
