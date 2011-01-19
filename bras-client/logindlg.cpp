@@ -144,5 +144,5 @@ void LoginDlg::on_username_changed() {
     Options::const_iterator it = options->find(username);
     if(it != options->end())
         /* change password */
-        entry_password_->set_text(it->second);
+        entry_password_->set_text(options->get_password(it));
 }
