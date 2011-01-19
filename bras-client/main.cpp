@@ -22,8 +22,7 @@ int main(int argc, char *argv[]) {
         Gtk::Main::quit();
     }
 
-//    bras->signal_state_changed.connect(sigc::ptr_fun(on_bras_state_change));
-    on_bras_state_change(Bras::DISCONNECTED, Bras::DISCONNECTED);
+    bras->signal_state_changed.connect(sigc::ptr_fun(on_bras_state_change));
 
     kit.run();
 }

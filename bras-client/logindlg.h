@@ -37,11 +37,13 @@ protected:
     ModelColumns columns_;
     Glib::RefPtr<Gtk::ListStore> tree_model_;
 
-    void add_column(const Glib::ustring&);
+    void add_row(const Glib::ustring&);
+    void erase_row(const Glib::ustring&);
 
 private:
     void on_login();
     void on_close();
+    void on_clear();
     bool on_delete_event(GdkEventAny*);
     void on_username_changed();
 
@@ -49,6 +51,7 @@ private:
     Gtk::Window *window_;
     Gtk::Button *button_ok_;
     Gtk::Button *button_close_;
+    Gtk::Button *button_clear_;
     Gtk::CheckButton *button_remember_;
     Gtk::ComboBoxEntry *entry_username_;
     Gtk::Entry *entry_password_;

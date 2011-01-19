@@ -18,6 +18,7 @@ LoginDlg::LoginDlg(): bras_(Bras::get()), shown_(false)
     builder->get_widget("login"    , window_);
     builder->get_widget("ok"       , button_ok_);
     builder->get_widget("close"    , button_close_);
+    builder->get_widget("clear"    , button_clear_);
     builder->get_widget("remember" , button_remember_);
     builder->get_widget("username" , entry_username_);
     builder->get_widget("password" , entry_password_);
@@ -32,6 +33,7 @@ LoginDlg::LoginDlg(): bras_(Bras::get()), shown_(false)
     /* connect signals */
     button_ok_->signal_clicked().connect(mem_fun(*this, &LoginDlg::on_login));
     button_close_->signal_clicked().connect(mem_fun(*this, &LoginDlg::on_close));
+    button_clear_->signal_clicked().connect(mem_fun(*this, &LoginDlg::on_clear));
     window_->signal_delete_event().connect(mem_fun(*this, &LoginDlg::on_delete_event));
     entry_username_->get_entry()->signal_activate().connect(mem_fun(*this, &LoginDlg::on_login));
     entry_username_->signal_changed().connect(mem_fun(*this, &LoginDlg::on_username_changed));
@@ -47,7 +49,7 @@ LoginDlg::LoginDlg(): bras_(Bras::get()), shown_(false)
 
     /* add stored usernames */
     for(Options::const_iterator it = options->begin();
-        it != options->end(); add_column(it->first), ++it)
+        it != options->end(); add_row(it->first), ++it)
         ;
 }
 
@@ -61,9 +63,19 @@ void LoginDlg::hide() {
     shown_ = false;
 }
 
-void LoginDlg::add_column(const Glib::ustring& username) {
+void LoginDlg::add_row(const Glib::ustring& username) {
     Gtk::TreeModel::Row row = *(tree_model_->append());
     row[columns_.username_] = username;
+}
+
+void LoginDlg::erase_row(const Glib::ustring& username) {
+    Gtk::TreeModel::Children children = tree_model_->children();
+    for(Gtk::TreeModel::iterator it = children.begin();
+        it != children.end(); ++it)
+        if((*it)[columns_.username_] == username) {
+            tree_model_->erase(it);
+            break;
+        }
 }
 
 void LoginDlg::on_login() {
@@ -84,7 +96,7 @@ void LoginDlg::on_login() {
 
         /* append it in column if not added before */
         if(options->find(username) == options->end())
-            add_column(username);
+            add_row(username);
 
         options->add_passwd(username, password);
     }
@@ -99,6 +111,22 @@ void LoginDlg::on_login() {
 
 void LoginDlg::on_close() {
     signal_close.emit();
+}
+
+void LoginDlg::on_clear() {
+    ustring username = entry_username_->get_active_text();
+    if(username.empty()) return;
+
+    /* erase saved username and password */
+    Options *options = Options::get();
+    Options::iterator it = options->find(username);
+    if(it != options->end())
+        options->erase(it);
+
+    /* erase model and entry */
+    entry_username_->get_entry()->set_text("");
+    entry_password_->set_text("");
+    erase_row(username);
 }
 
 bool LoginDlg::on_delete_event(GdkEventAny*) {
