@@ -6,6 +6,8 @@ brasd_SOURCES = \
 	main.c \
 	server.c \
 	server.h \
+	list.c \
+	list.h \
 	bras.c \
 	bras.h \
 	utils.c \

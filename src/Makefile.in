@@ -45,8 +45,8 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(sbindir)"
 PROGRAMS = $(sbin_PROGRAMS)
-am_brasd_OBJECTS = main.$(OBJEXT) server.$(OBJEXT) bras.$(OBJEXT) \
-	utils.$(OBJEXT)
+am_brasd_OBJECTS = main.$(OBJEXT) server.$(OBJEXT) list.$(OBJEXT) \
+	bras.$(OBJEXT) utils.$(OBJEXT)
 brasd_OBJECTS = $(am_brasd_OBJECTS)
 brasd_DEPENDENCIES =
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
@@ -165,6 +165,8 @@ brasd_SOURCES = \
 	main.c \
 	server.c \
 	server.h \
+	list.c \
+	list.h \
 	bras.c \
 	bras.h \
 	utils.c \
@@ -253,6 +255,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bras.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/list.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utils.Po@am__quote@

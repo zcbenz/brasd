@@ -1,6 +1,7 @@
 #include "server.h"
 #include "bras.h"
 #include "utils.h"
+#include "list.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -14,8 +15,7 @@
 
 extern enum BRAS_STATE state;
 extern int debug;
-struct event ev_client;
-int cfd = -1; /* client fd */
+struct node *client_list = NULL;
 
 const char *description[] = {
     "connected\n",
@@ -25,25 +25,23 @@ const char *description[] = {
 };
 
 static void client_callback(int fd, short event, void *arg);
+static void client_close(int fd);
 
-int init_server(const char *node, const char *service)
-{
+int init_server(const char *node, const char *service) {
     struct addrinfo hints, *result;
     bzero(&hints, sizeof(struct addrinfo));
     hints.ai_family   = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags    = AI_PASSIVE;
 
-    if(getaddrinfo(node, service, &hints, &result))
-    {
+    if(getaddrinfo(node, service, &hints, &result)) {
         perror("getaddrinfo");
         return -1;
     }
 
     int sfd = -1;
     struct addrinfo *rp;
-    for(rp = result; rp != NULL; rp = rp->ai_next)
-    {
+    for(rp = result; rp != NULL; rp = rp->ai_next) {
         sfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
         if(sfd == -1)
             continue;
@@ -67,56 +65,50 @@ int init_server(const char *node, const char *service)
     int val = 1;
     setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(int));
 
-    if(listen(sfd, 1) == -1)
-    {
+    if(listen(sfd, 1) == -1) {
         perror("listen");
         close(sfd);
         return -1;
     }
 
+	/* create client list */
+	if(!client_list)
+		client_list = create_list(); /* this list will never be freed */
+
     return sfd;
 }
 
-void server_callback(int fd, short event, void *arg)
-{
+void server_callback(int fd, short event, void *arg) {
     event_add((struct event*) arg, NULL);
 
     struct sockaddr client_addr;
-    int new_cfd;
+    int client_fd;
     size_t length = sizeof(struct sockaddr);
-    if((new_cfd = accept(fd, &client_addr, &length)) == -1)
+    if((client_fd = accept(fd, &client_addr, &length)) == -1)
         return;
 
-    /* only allow one connection one time */
-    if(cfd > 0)
-    {
-        int tmp = write(new_cfd, "IN USE\n", 8);
-        (void) tmp; /* suppress warnings */
-        close(new_cfd);
-        return;
-    }
+	struct node *client = list_append(client_list, client_fd);
 
-    cfd = new_cfd;
     post_state();
 
-    event_set(&ev_client, cfd, EV_READ, client_callback, &ev_client);
-    event_add(&ev_client, NULL);
+    event_set(&client->event, client->fd, EV_READ, client_callback, &client->event);
+    event_add(&client->event, NULL);
 }
 
-void post_state()
-{
-    if(cfd < 0) return;
+void post_state() {
+	struct node *it = client_list->next;
+	while(it) {
+		if(write(it->fd, description[state], strlen(description[state])) <= 0)
+			if(debug) perror("Cannot post state to client");
 
-    int tmp = write(cfd, description[state], strlen(description[state]) + 1);
-    (void) tmp; /* suppress warnings */
+		it = it->next;
+	}
 }
 
-static void client_callback(int fd, short event, void *arg)
-{
+static void client_callback(int fd, short event, void *arg) {
     char buffer[512] = { 0 };
     int len;
-    if((len = read(cfd, buffer, 512)) > 0)
-    {
+    if((len = read(fd, buffer, 512)) > 0) {
         if(strhcmp(buffer, "STAT"))
             post_state();
         else if(strhcmp(buffer, "CONNECT")) {
@@ -131,12 +123,24 @@ static void client_callback(int fd, short event, void *arg)
             fprintf(stderr, "Unrecognized command: %s\n", buffer);
         }
     }
-    else /* client closed */
-    {
-        close(cfd);
-        cfd = -1;
+    else { /* client closed */
+		if(debug)
+			fprintf(stderr, "Close client: %d\n", fd);
+		client_close(fd);
         return;
     }
 
     event_add((struct event*) arg, NULL);
+}
+
+static void client_close(int fd) {
+	struct node *it = list_find(client_list, fd);
+	/* close and remove client from list, and remove from monitoring */
+	if(it) {
+		event_del(&it->event);
+		close(it->fd);
+		list_remove(it);
+	} else {
+		fprintf(stderr, "Remove invalid client from list: %d\n", fd);
+	}
 }
