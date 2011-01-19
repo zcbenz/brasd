@@ -87,12 +87,13 @@ void server_callback(int fd, short event, void *arg) {
     if((client_fd = accept(fd, &client_addr, &length)) == -1)
         return;
 
+    /* add new client to list */
 	struct node *client = list_append(client_list, client_fd);
-
-    broadcast_state();
-
     event_set(&client->event, client->fd, EV_READ, client_callback, &client->event);
     event_add(&client->event, NULL);
+
+    /* tell the client of current state */
+    post_state(client_fd);
 }
 
 void broadcast_state() {
@@ -103,6 +104,11 @@ void broadcast_state() {
 
 		it = it->next;
 	}
+}
+
+void post_state(int fd) {
+    if(write(fd, description[state], strlen(description[state])) <= 0)
+        client_close(fd);
 }
 
 static void client_callback(int fd, short event, void *arg) {
@@ -125,7 +131,7 @@ static void client_callback(int fd, short event, void *arg) {
     }
     else { /* client closed */
 		if(debug)
-			fprintf(stderr, "Close client: %d\n", fd);
+			fprintf(stderr, "Client closed: %d\n", fd);
 		client_close(fd);
         return;
     }
