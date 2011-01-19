@@ -163,7 +163,6 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 brasd_SOURCES = \
 	main.c \
-	brasd.h \
 	server.c \
 	server.h \
 	bras.c \

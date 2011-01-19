@@ -4,7 +4,6 @@ sbin_PROGRAMS = brasd
 
 brasd_SOURCES = \
 	main.c \
-	brasd.h \
 	server.c \
 	server.h \
 	bras.c \
