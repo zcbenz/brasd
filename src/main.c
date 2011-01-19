@@ -20,6 +20,7 @@ enum BRAS_STATE state;
 int xl2tpd_fd, sfd;
 int debug = 0;
 
+void kill_xl2tpd();
 pid_t init_xl2tpd(int *out, int *err);
 void on_out(int fd, short event, void *arg);
 void breakdown_output(const char *, size_t);
@@ -28,20 +29,24 @@ void translate(const char *);
 static void handle_interupt(int);
 static void on_send_success(int);
 
-int main(int argc, char *argv[])
-{
-    /* use "brasd -D" to init as not daemon */
-    if(!(argc == 2 && !strcmp(argv[1], "-D"))) {
+int main(int argc, char *argv[]) {
+    /* use "brasd -D" to enter debug mode,
+     * bras will not init as daemon */
+    if(argc == 2 && !strcmp(argv[1], "-D")) {
+        debug = 1;
+    } else {
         if(daemon(0, 1)) {
             fputs("Cannot start as daemon", stderr);
             exit(EXIT_FAILURE);
         }
-    } else
-        debug = 1;
+    }
 
+    /* find and kill xl2tpd */
+    kill_xl2tpd();
+
+    /* start xl2tpd and hold the stdout of xl2tpd */
     int l2tp_out, l2tp_err; /* file descriptors of pipe */
-    if((xl2tpd_fd = init_xl2tpd(&l2tp_out, &l2tp_err)) < 0)
-    {
+    if((xl2tpd_fd = init_xl2tpd(&l2tp_out, &l2tp_err)) < 0) {
         fputs("Cannot start xl2tpd", stderr);
         exit(EXIT_FAILURE);
     }
@@ -83,6 +88,10 @@ int main(int argc, char *argv[])
     wait(NULL);
 
     return 0;
+}
+
+void kill_xl2tpd() {
+    pclose(popen("killall -9 xl2tpd", "r"));
 }
 
 /* start xl2tpd and redirect its output */
