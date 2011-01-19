@@ -119,6 +119,7 @@ void LoginDlg::on_clear() {
 
     /* erase saved username and password */
     Options *options = Options::get();
+    options->set("");
     Options::iterator it = options->find(username);
     if(it != options->end())
         options->erase(it);
