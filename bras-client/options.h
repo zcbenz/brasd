@@ -19,6 +19,9 @@ public:
     static void set(const Glib::ustring& username) { curt_ = username; }
     static void add_passwd(const Glib::ustring& username, const Glib::ustring& password) { passwords_[username] = encode(password); curt_ = username; }
 
+    static const char *get_server() { return server_.c_str(); }
+    static const char *get_port() { return port_.c_str(); }
+
     static iterator begin() { return passwords_.begin(); }
     static iterator end() { return passwords_.end(); }
     static iterator find(const Glib::ustring& username) { return passwords_.find(username); }

@@ -1,4 +1,5 @@
 #include "bras.h"
+#include "options.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -64,7 +65,8 @@ Bras::~Bras() {
 }
 
 Bras *Bras::get() {
-    static Bras instance("127.0.0.1", "10086");
+    Options *options = Options::get();
+    static Bras instance(options->get_server(), options->get_port());
 
     return &instance;
 }

@@ -11,8 +11,8 @@
 
 Options::Passwords Options::passwords_;
 Glib::ustring Options::curt_;
-Glib::ustring Options::server_;
-Glib::ustring Options::port_;
+Glib::ustring Options::server_ = "127.0.0.1";
+Glib::ustring Options::port_ = "10086";
 
 using Glib::ustring;
 
@@ -39,6 +39,12 @@ Options::Options() {
         /* get current username */
         else if(sscanf(buffer, "curt %255s", arg1) == 1)
             curt_ = arg1;
+        /* get brasd's address */
+        else if(sscanf(buffer, "serv %255s", arg1) == 1)
+            server_ = arg1;
+        /* get brasd's port */
+        else if(sscanf(buffer, "port %255s", arg1) == 1)
+            port_ = arg1;
     }
 
     fclose(file);
@@ -59,6 +65,12 @@ Options::~Options() {
 
     /* Output configuration file */
     fputs("# BRAS Client configuration file \n\n", file);
+
+    fputs("# brasd's server address\n", file);
+    fprintf(file, "serv %s\n\n", server_.c_str());
+
+    fputs("# brasd's port\n", file);
+    fprintf(file, "port %s\n\n", port_.c_str());
 
     if(!curt_.empty()) {
         fputs("# current user\n", file);
