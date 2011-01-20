@@ -1,0 +1,10 @@
+# brasd configuration file
+
+# whether enable remote control from internet
+internet off
+
+# brasd listen port, default is 10086
+port 10086
+
+# local address, don't modify it
+server 127.0.0.1

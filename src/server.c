@@ -15,6 +15,7 @@
 
 extern enum BRAS_STATE state;
 extern int debug;
+extern struct options_t options;
 struct node *client_list = NULL;
 
 const char *description[] = {
@@ -28,6 +29,11 @@ static void client_callback(int fd, short event, void *arg);
 static void client_close(int fd);
 
 int init_server(const char *node, const char *service) {
+    /* set node as NULL if options.internet is on */
+    if(options.internet)
+        node = NULL;
+
+    /* init socket */
     struct addrinfo hints, *result;
     bzero(&hints, sizeof(struct addrinfo));
     hints.ai_family   = AF_UNSPEC;
@@ -52,8 +58,7 @@ int init_server(const char *node, const char *service) {
         close(sfd);
     }
 
-    if(!rp)                 /* No address succeeded */
-    {
+    if(!rp) {               /* No address succeeded */
         perror("Could not bind");
         close(sfd);
         return -1;

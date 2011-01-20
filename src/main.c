@@ -18,6 +18,7 @@
 enum BRAS_STATE state;
 int xl2tpd_pid, server_fd;
 int debug = 0;
+struct options_t options;
 
 void kill_xl2tpd();
 pid_t init_xl2tpd(int *out, int *err);
@@ -40,6 +41,9 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    /* read options from /etc/brasd */
+    read_options(&options);
+
     /* find and kill xl2tpd */
     kill_xl2tpd();
 
@@ -54,7 +58,7 @@ int main(int argc, char *argv[]) {
     state = DISCONNECTED;
 
     /* init server */
-    if((server_fd = init_server("127.0.0.1", "10086")) < 0) {
+    if((server_fd = init_server(options.server, options.port)) < 0) {
         fputs("Cannot init server, brasd already runs?\n", stderr);
         kill(xl2tpd_pid, SIGKILL);
         exit(EXIT_FAILURE);

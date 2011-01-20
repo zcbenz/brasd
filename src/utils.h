@@ -3,6 +3,7 @@
 
 struct options_t {
     int internet;
+    char port[64];
     char server[128];
 };
 

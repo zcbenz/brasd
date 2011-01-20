@@ -4,6 +4,8 @@
 
 #include "utils.h"
 
+extern int debug;
+
 /* compare only first characters */
 int strhcmp(const char *str1, const char *str2) {
     while(*str1 && * str2)
@@ -15,13 +17,15 @@ int strhcmp(const char *str1, const char *str2) {
 /* read options from /etc/brasd */
 int read_options(struct options_t *options) {
     /* fill in default values */
-    strcpy(options->server, "bras.seu.edu.cn");
+    strcpy(options->server, "127.0.0.1");
+    strcpy(options->port, "10086");
     options->internet = 0;
 
     /* TODO get the path of /etc through autoconf */
     FILE *file = fopen("/etc/brasd", "r+");
     if(!file) {
-        perror("Cannot open /etc/brasd");
+        if(debug)
+            perror("Cannot open /etc/brasd");
         return -1;
     }
 
@@ -35,6 +39,9 @@ int read_options(struct options_t *options) {
         /* read server name */
         else if(sscanf(buffer, "server %255s", options->server) == 1)
             ;
+        /* read port */
+        else if(sscanf(buffer, "port %255s", options->port) == 1)
+            ;
         /* read whether enable internet control */
         else if(sscanf(buffer, "internet %s", arg) == 1) {
             if(!strcmp(arg, "on"))
@@ -45,6 +52,13 @@ int read_options(struct options_t *options) {
     }
 
     fclose(file);
+
+    /* print options */
+    if(debug) {
+        fprintf(stderr, "server runs as %s\n", options->server);
+        fprintf(stderr, "server port is %s\n", options->port);
+        fprintf(stderr, "internet support is %d\n", options->internet);
+    }
 
     return 0;
 }
