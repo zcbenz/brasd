@@ -11,6 +11,8 @@
 
 Options::Passwords Options::passwords_;
 Glib::ustring Options::curt_;
+Glib::ustring Options::server_;
+Glib::ustring Options::port_;
 
 using Glib::ustring;
 
@@ -25,18 +27,18 @@ Options::Options() {
 
     char buffer[512];
     while(fgets(buffer, 512, file)) {
-        char username[256];
-        char password[256];
+        char arg1[256];
+        char arg2[256];
 
         /* skip comments */
         if(buffer[0] == '#')
             continue;
         /* get stored passwords */
-        else if(sscanf(buffer, "pair %255s %255s", username, password) == 2)
-            passwords_[ustring(username)] = ustring(password);
+        else if(sscanf(buffer, "pair %255s %255s", arg1, arg2) == 2)
+            passwords_[ustring(arg1)] = ustring(arg2);
         /* get current username */
-        else if(sscanf(buffer, "curt %255s", username) == 1)
-            curt_ = username;
+        else if(sscanf(buffer, "curt %255s", arg1) == 1)
+            curt_ = arg1;
     }
 
     fclose(file);

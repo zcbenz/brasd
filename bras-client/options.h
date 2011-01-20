@@ -34,6 +34,8 @@ private:
 
     static Passwords passwords_;
     static Glib::ustring curt_;
+    static Glib::ustring server_;
+    static Glib::ustring port_;
 };
 
 #endif /* end of OPTIONS_H */
