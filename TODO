@@ -1,5 +1,3 @@
-brasd同时处理多个客户端
-
 brasd增加选项，控制是否接受网络控制
 
 bras-client在brasd未启动时提示启动brasd
