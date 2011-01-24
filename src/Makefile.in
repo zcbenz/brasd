@@ -70,7 +70,8 @@ AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
-CFLAGS = @CFLAGS@ -O2 -Wall -DCONFIGS_DIR=\""$(pkgdatadir)/configs"\"
+CFLAGS = @CFLAGS@ -O2 -Wall -Wextra \
+	-DCONFIGS_DIR=\""$(pkgdatadir)/configs"\"
 CLIENT_DIR = @CLIENT_DIR@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
