@@ -1,6 +1,8 @@
 configsdir = $(pkgdatadir)/configs
 configs_DATA = chap-secrets options.l2tpd xl2tpd.conf
 
+pkgdata_DATA = route-table
+
 brasdconfdir = /etc
 brasdconf_DATA = brasd
 

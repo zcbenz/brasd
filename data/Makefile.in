@@ -66,8 +66,8 @@ am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
 am__installdirs = "$(DESTDIR)$(brasdconfdir)" \
-	"$(DESTDIR)$(configsdir)"
-DATA = $(brasdconf_DATA) $(configs_DATA)
+	"$(DESTDIR)$(configsdir)" "$(DESTDIR)$(pkgdatadir)"
+DATA = $(brasdconf_DATA) $(configs_DATA) $(pkgdata_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
@@ -170,6 +170,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 configsdir = $(pkgdatadir)/configs
 configs_DATA = chap-secrets options.l2tpd xl2tpd.conf
+pkgdata_DATA = route-table
 brasdconfdir = /etc
 brasdconf_DATA = brasd
 EXTRA_DIST = $(configs_DATA) $(brasdconf_DATA)
@@ -246,6 +247,26 @@ uninstall-configsDATA:
 	test -n "$$files" || exit 0; \
 	echo " ( cd '$(DESTDIR)$(configsdir)' && rm -f" $$files ")"; \
 	cd "$(DESTDIR)$(configsdir)" && rm -f $$files
+install-pkgdataDATA: $(pkgdata_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(pkgdatadir)" || $(MKDIR_P) "$(DESTDIR)$(pkgdatadir)"
+	@list='$(pkgdata_DATA)'; test -n "$(pkgdatadir)" || list=; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(pkgdatadir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(pkgdatadir)" || exit $$?; \
+	done
+
+uninstall-pkgdataDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(pkgdata_DATA)'; test -n "$(pkgdatadir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	test -n "$$files" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(pkgdatadir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(pkgdatadir)" && rm -f $$files
 tags: TAGS
 TAGS:
 
@@ -287,7 +308,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(brasdconfdir)" "$(DESTDIR)$(configsdir)"; do \
+	for dir in "$(DESTDIR)$(brasdconfdir)" "$(DESTDIR)$(configsdir)" "$(DESTDIR)$(pkgdatadir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -335,7 +356,8 @@ info: info-am
 
 info-am:
 
-install-data-am: install-brasdconfDATA install-configsDATA
+install-data-am: install-brasdconfDATA install-configsDATA \
+	install-pkgdataDATA
 
 install-dvi: install-dvi-am
 
@@ -379,7 +401,8 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-brasdconfDATA uninstall-configsDATA
+uninstall-am: uninstall-brasdconfDATA uninstall-configsDATA \
+	uninstall-pkgdataDATA
 
 .MAKE: install-am install-strip
 
@@ -389,11 +412,12 @@ uninstall-am: uninstall-brasdconfDATA uninstall-configsDATA
 	install-data install-data-am install-dvi install-dvi-am \
 	install-exec install-exec-am install-html install-html-am \
 	install-info install-info-am install-man install-pdf \
-	install-pdf-am install-ps install-ps-am install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
-	pdf-am ps ps-am uninstall uninstall-am uninstall-brasdconfDATA \
-	uninstall-configsDATA
+	install-pdf-am install-pkgdataDATA install-ps install-ps-am \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-generic pdf pdf-am ps ps-am uninstall uninstall-am \
+	uninstall-brasdconfDATA uninstall-configsDATA \
+	uninstall-pkgdataDATA
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
