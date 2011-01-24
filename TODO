@@ -1,6 +1,8 @@
 bras-client在brasd未启动时提示启动brasd
 
-bras-client增加设置服务器地址和端口
+brasd将增加路由的部分分离出来
+brasd传递错误具体信息
+brasd翻译命令时的代码重写
 
 增加bras-indicator，用于在托盘区显出BRAS状态，并提供连接/断线/多账号切换
 等功能

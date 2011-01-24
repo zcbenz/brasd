@@ -18,8 +18,9 @@
 #define XL2TPDCONF_TPL   CONFIGS_DIR "/xl2tpd.conf"
 #define CHAPSECRET_TPL   CONFIGS_DIR "/chap-secrets"
 #define PPPOPTIONS_TPL   CONFIGS_DIR "/options.l2tpd"
+/* route table file path */
+#define ROUTE_TABLE_PATH DATA_DIR "/route-table"
 
-static void do_command(const char *command, const char *arg);
 static int write_to(const char *string, const char *path);
 static int get_file_size(int fd);
 static int read_file(char *buffer, int fd);
@@ -43,23 +44,23 @@ int bras_get_default_gateway(char *buffer)
     return 0;
 }
 
-int bras_add_route()
-{
+int bras_add_route() {
     char default_gateway[64];
-    if(bras_get_default_gateway(default_gateway)) return 1;
+    if(bras_get_default_gateway(default_gateway)) return -1;
 
-    do_command("route add -net 172.16.0.0 netmask 255.240.0.0 gw %s"        , default_gateway);
-    do_command("route add -net 202.119.0.0 netmask 255.255.224.0 gw %s"     , default_gateway);
-    do_command("route add -net 202.119.144.0 netmask 255.255.240.0 gw %s"   , default_gateway);
-    do_command("route add -net 211.65.32.0 netmask 255.255.224.0 gw %s"     , default_gateway);
-    do_command("route add -net 202.119.24.55 netmask 255.255.255.255 gw %s" , default_gateway);
-    do_command("route add -net 58.192.112.0 netmask 255.255.240.0 gw %s"    , default_gateway);
-    do_command("route add -net 121.229.0.0 netmask 255.255.0.0 gw %s"       , default_gateway);
-    do_command("route add -net 10.0.0.0 netmask 255.0.0.0 gw %s"            , default_gateway);
-    do_command("route add -net 121.248.48.0 netmask 255.255.240.0 gw %s"    , default_gateway);
-    do_command("route add -net 211.65.232.0 netmask 255.255.252.0 gw %s"    , default_gateway);
-    do_command("route del default gw %s", default_gateway);
-    do_command("route add default", default_gateway);
+    /* read route table from file */
+    FILE *table = fopen(ROUTE_TABLE_PATH, "r");
+    if(!table) {
+        perror("Can not open route table file");
+        return -1;
+    }
+
+    /* add route table line by line */
+    char line[512], command[512];
+    while(fgets(line, 512, table)) {
+        sprintf(command, line, default_gateway);
+        pclose(popen(command, "r"));
+    }
 
     return 0;
 }
@@ -92,13 +93,6 @@ int bras_set(const char *username, const char *password)
 go_error:
     perror("Cannot write config file");
     return -1;
-}
-
-static void do_command(const char *command, const char *arg)
-{
-    char buffer[128];
-    sprintf(buffer, command, arg);
-    pclose(popen(buffer, "r"));
 }
 
 static int write_to(const char *string, const char *path)
