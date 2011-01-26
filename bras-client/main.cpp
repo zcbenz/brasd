@@ -61,7 +61,7 @@ inline LoginDlg *create_login_dialog() {
     return logindlg;
 }
 
-static void on_bras_state_change(Bras::State state, Bras::State last) {
+static void on_bras_state_change(Bras::State state, Bras::State) {
     hide_current_dialog();
 
     if(con_response) { /* cancel previous no_response call */

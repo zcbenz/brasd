@@ -51,7 +51,6 @@ private:
     Gtk::Window *window_;
     Gtk::Button *button_ok_;
     Gtk::Button *button_close_;
-    Gtk::Button *button_clear_;
     Gtk::CheckButton *button_remember_;
     Gtk::ComboBoxEntry *entry_username_;
     Gtk::Entry *entry_password_;

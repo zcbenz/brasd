@@ -18,7 +18,6 @@ LoginDlg::LoginDlg(): bras_(Bras::get()), shown_(false)
     builder->get_widget("login"    , window_);
     builder->get_widget("ok"       , button_ok_);
     builder->get_widget("close"    , button_close_);
-    builder->get_widget("clear"    , button_clear_);
     builder->get_widget("remember" , button_remember_);
     builder->get_widget("username" , entry_username_);
     builder->get_widget("password" , entry_password_);
@@ -33,11 +32,11 @@ LoginDlg::LoginDlg(): bras_(Bras::get()), shown_(false)
     /* connect signals */
     button_ok_->signal_clicked().connect(mem_fun(*this, &LoginDlg::on_login));
     button_close_->signal_clicked().connect(mem_fun(*this, &LoginDlg::on_close));
-    button_clear_->signal_clicked().connect(mem_fun(*this, &LoginDlg::on_clear));
     window_->signal_delete_event().connect(mem_fun(*this, &LoginDlg::on_delete_event));
     entry_username_->get_entry()->signal_activate().connect(mem_fun(*this, &LoginDlg::on_login));
     entry_username_->signal_changed().connect(mem_fun(*this, &LoginDlg::on_username_changed));
     entry_password_->signal_activate().connect(mem_fun(*this, &LoginDlg::on_login));
+    entry_password_->signal_icon_release().connect(sigc::hide(sigc::hide((mem_fun(*this, &LoginDlg::on_clear)))));
 
     /* set window icon */
     window_->set_icon_from_file(UI_DIR "/bras-client.png");
