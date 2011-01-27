@@ -10,7 +10,8 @@
 namespace Gtk {
     enum MY_RESPONESE {
         RESPONSE_DISCONNECT = 1,
-        RESPONSE_CONNECT
+        RESPONSE_CONNECT,
+        RESPONSE_RESTART
     }; 
 }
 

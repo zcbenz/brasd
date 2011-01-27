@@ -16,9 +16,19 @@ int main(int argc, char *argv[]) {
     } catch (std::exception& error) {
         Gtk::MessageDialog msg(error.what(), false,
                                Gtk::MESSAGE_ERROR,
-                               Gtk::BUTTONS_OK,
+                               Gtk::BUTTONS_NONE,
                                true);
-        msg.run();
+
+        msg.add_button("Start brasd", Gtk::RESPONSE_RESTART);
+        msg.add_button(GTK_STOCK_CLOSE, Gtk::RESPONSE_CLOSE)->grab_focus();
+
+        /* start brasd, and then restart bras-client */
+        if(msg.run() == Gtk::RESPONSE_RESTART) {
+            /* this is the easy dirty way */
+            pclose(popen("gksu service brasd start", "r"));
+            execlp("bras-client", "bras-client", NULL);
+        }
+
         return 0; /* We have not enter main loop, so don't use Gtk::Main::Quit */
     }
 
