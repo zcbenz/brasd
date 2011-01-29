@@ -117,26 +117,36 @@ void post_state(int fd) {
 }
 
 static void client_callback(int fd, short event, void *arg) {
-    char buffer[512] = { 0 };
+    char buffer[512];
     int len;
     if((len = read(fd, buffer, 512)) > 0) {
-        if(strhcmp(buffer, "STAT"))
-            broadcast_state();
-        else if(strhcmp(buffer, "CONNECT")) {
-            bras_connect();
-        } else if(strhcmp(buffer, "DISCONNECT")) {
-            bras_disconnect();
-        } else if(strhcmp(buffer, "SET")) {
-            char tmp[4], username[16], password[32];
-            if(sscanf(buffer, "%s %s %s", tmp, username, password) == 3)
-                bras_set(username, password);
-        } else {
-            fprintf(stderr, "Unrecognized command: %s\n", buffer);
+        /* turn string into file stream */
+        FILE *in = fmemopen((void*)buffer, len, "r");
+
+        char line[512];
+        /* get commands line by line */
+        while(fgets(line, 512, in)) {
+            if(!*line) continue; /* skip empty line */
+
+            /* parse the commands */
+            if(strhcmp(line, "STAT"))
+                broadcast_state();
+            else if(strhcmp(line, "CONNECT"))
+                bras_connect();
+            else if(strhcmp(line, "DISCONNECT"))
+                bras_disconnect();
+            else if(strhcmp(line, "SET")) {
+                char username[16], password[32];
+                if(sscanf(buffer, "SET %15s %31s", username, password) == 3)
+                    bras_set(username, password);
+            } else
+                if(debug) fprintf(stderr, "Unrecognized command: %s\n", line);
         }
-    }
-    else { /* client closed */
-		if(debug)
-			fprintf(stderr, "Client closed: %d\n", fd);
+
+        fclose(in);
+    } else { /* client closed */
+		if(debug) fprintf(stderr, "Client closed: %d\n", fd);
+
 		client_close(fd);
         return;
     }

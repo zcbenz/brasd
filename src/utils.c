@@ -8,10 +8,14 @@ extern int debug;
 
 /* compare only first characters */
 int strhcmp(const char *str1, const char *str2) {
-    while(*str1 && * str2)
+    int i = 0;
+    while(*str1 && * str2) {
+        i++;
         if(*str1++ != *str2++) return 0;
+    }
 
-    return 1;
+    /* return current position */
+    return i;
 }
 
 /* read options from /etc/brasd */

@@ -1,4 +1,4 @@
-CFLAGS+= -O2 -Wall -Wextra -DDATA_DIR=\""$(pkgdatadir)"\" -DCONFIGS_DIR=\""$(pkgdatadir)/configs"\"
+CFLAGS+= -O2 -Wall -DDATA_DIR=\""$(pkgdatadir)"\" -DCONFIGS_DIR=\""$(pkgdatadir)/configs"\"
 
 sbin_PROGRAMS = brasd
 

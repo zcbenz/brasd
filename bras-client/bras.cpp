@@ -93,7 +93,6 @@ void Bras::connect() {
 
 void Bras::connect(const char *username, const char *password) {
     set(username, password);
-    Glib::usleep(10000);
     connect();
 }
 
