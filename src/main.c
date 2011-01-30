@@ -114,6 +114,7 @@ int main(int argc, char *argv[]) {
     kill(xl2tpd_pid, SIGKILL);
 
     /* close fds and wait to exit */
+    close_server(server_fd);
     close(l2tp_err);
     close(l2tp_out);
     wait(NULL);

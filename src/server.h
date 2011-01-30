@@ -4,6 +4,9 @@
 /* init socket */
 int init_server(const char *node, const char *service);
 
+/* close all clients and then close server */
+void close_server(int fd);
+
 /* called by libevent when there is new connection */
 void server_callback(int fd, short event, void *arg);
 

@@ -93,7 +93,22 @@ int init_server(const char *node, const char *service) {
     return sfd;
 }
 
-void server_callback(int fd, short event, void *arg) {
+/* close all clients and then close server */
+void
+close_server(int fd) {
+	struct node *it = client_list->next;
+	while (it) {
+        close(it->fd);
+        bufferevent_free(it->buf_ev);
+        list_remove(it);
+
+		it = it->next;
+	}
+}
+
+/* called by libevent when there is new connection */
+void
+server_callback(int fd, short event, void *arg) {
     event_add((struct event*) arg, NULL);
 
     struct sockaddr client_addr;
@@ -117,7 +132,7 @@ void server_callback(int fd, short event, void *arg) {
 void
 broadcast_state() {
 	struct node *it = client_list->next;
-	while(it) {
+	while (it) {
         bufferevent_write(it->buf_ev, description[state], strlen(description[state]));
 
 		it = it->next;
@@ -134,7 +149,7 @@ static void
 on_client_read(struct bufferevent *buf_ev, void *arg) {
     /* read lines from client */
     char *cmd = NULL;
-    while((cmd = evbuffer_readline(buf_ev->input))) {
+    while ((cmd = evbuffer_readline(buf_ev->input))) {
         translate(cmd);
         free(cmd);
     }
