@@ -1,11 +1,13 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#include <event.h>
+/* init socket */
+int init_server(const char *node, const char *service);
 
-int  init_server(const char *node, const char *service);
+/* called by libevent when there is new connection */
 void server_callback(int fd, short event, void *arg);
+
+/* tell all clients of current state */
 void broadcast_state();
-void post_state(int fd);
 
 #endif /* end of SERVER_H */

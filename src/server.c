@@ -32,7 +32,11 @@ static void on_client_read(struct bufferevent *buf_ev, void *arg);
 static void on_client_write(struct bufferevent *buf_ev, void *arg);
 static void on_client_error(struct bufferevent *buf_ev, short what, void *arg);
 
+/* translate client's commands into actions */
 static void translate(const char *);
+
+/* tell the client of current state */
+static void post_state(struct node *client);
 
 int init_server(const char *node, const char *service) {
     /* set node as NULL if options.internet is on */
@@ -106,21 +110,24 @@ void server_callback(int fd, short event, void *arg) {
     bufferevent_enable(client->buf_ev, EV_READ);
 
     /* tell the client of current state */
-    post_state(client_fd);
+    post_state(client);
 }
 
-void broadcast_state() {
+/* tell all clients of current state */
+void
+broadcast_state() {
 	struct node *it = client_list->next;
 	while(it) {
-		if(write(it->fd, description[state], strlen(description[state])) <= 0)
-			if(debug) perror("Cannot post state to client");
+        bufferevent_write(it->buf_ev, description[state], strlen(description[state]));
 
 		it = it->next;
 	}
 }
 
-void post_state(int fd) {
-    write(fd, description[state], strlen(description[state]));
+/* tell the client of current state */
+void
+post_state(struct node *client) {
+    bufferevent_write(client->buf_ev, description[state], strlen(description[state]));
 }
 
 static void
@@ -153,6 +160,7 @@ on_client_error(struct bufferevent *buf_ev, short what, void *arg) {
     bufferevent_free(buf_ev);
 }
 
+/* translate client's commands into actions */
 static void
 translate(const char *cmd) {
     /* skip empty line */
