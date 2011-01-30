@@ -5,16 +5,16 @@
 
 struct node {
     int fd;
-    struct event event;
+    struct bufferevent *buf_ev;
     struct node *next;
     struct node *prev;
 };
 
 struct node *create_list();
-void free_list(struct node*);
 struct node *list_append(struct node*, int);
-int list_remove(struct node*);
 struct node *list_find(struct node*, int);
+void free_list(struct node*);
 void list_print(struct node*);
+int list_remove(struct node*);
 
 #endif /* end of LIST_H */

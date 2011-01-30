@@ -2,6 +2,8 @@
 #include <string.h>
 #include <config.h>
 
+#include <fcntl.h>
+
 #include "utils.h"
 
 extern int debug;
@@ -63,6 +65,21 @@ int read_options(struct options_t *options) {
         fprintf(stderr, "server port is %s\n", options->port);
         fprintf(stderr, "internet support is %d\n", options->internet);
     }
+
+    return 0;
+}
+
+/* set the fd to non-blocking mode */
+int
+set_nonblock(int fd) {
+    int flags;
+
+    flags = fcntl(fd, F_GETFL);
+    if (flags < 0) return flags;
+
+    flags |= O_NONBLOCK;
+    if (fcntl(fd, F_SETFL, flags) < 0)
+        return -1;
 
     return 0;
 }

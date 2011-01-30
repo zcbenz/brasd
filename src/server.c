@@ -5,6 +5,8 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <err.h>
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -25,8 +27,12 @@ const char *description[] = {
     "error\n"
 };
 
-static void client_callback(int fd, short event, void *arg);
-static void client_close(int fd);
+/* callbacks for libevent */
+static void on_client_read(struct bufferevent *buf_ev, void *arg);
+static void on_client_write(struct bufferevent *buf_ev, void *arg);
+static void on_client_error(struct bufferevent *buf_ev, short what, void *arg);
+
+static void translate(const char *);
 
 int init_server(const char *node, const char *service) {
     /* set node as NULL if options.internet is on */
@@ -94,8 +100,10 @@ void server_callback(int fd, short event, void *arg) {
 
     /* add new client to list */
 	struct node *client = list_append(client_list, client_fd);
-    event_set(&client->event, client->fd, EV_READ, client_callback, &client->event);
-    event_add(&client->event, NULL);
+    set_nonblock(client_fd);
+    client->buf_ev = bufferevent_new(client_fd, on_client_read,
+            on_client_write, on_client_error, client);
+    bufferevent_enable(client->buf_ev, EV_READ);
 
     /* tell the client of current state */
     post_state(client_fd);
@@ -112,56 +120,56 @@ void broadcast_state() {
 }
 
 void post_state(int fd) {
-    if(write(fd, description[state], strlen(description[state])) <= 0)
-        client_close(fd);
+    write(fd, description[state], strlen(description[state]));
 }
 
-static void client_callback(int fd, short event, void *arg) {
-    char buffer[512];
-    int len;
-    if((len = read(fd, buffer, 512)) > 0) {
-        /* turn string into file stream */
-        FILE *in = fmemopen((void*)buffer, len, "r");
-
-        char line[512];
-        /* get commands line by line */
-        while(fgets(line, 512, in)) {
-            if(!*line) continue; /* skip empty line */
-
-            /* parse the commands */
-            if(strhcmp(line, "STAT"))
-                broadcast_state();
-            else if(strhcmp(line, "CONNECT"))
-                bras_connect();
-            else if(strhcmp(line, "DISCONNECT"))
-                bras_disconnect();
-            else if(strhcmp(line, "SET")) {
-                char username[16], password[32];
-                if(sscanf(buffer, "SET %15s %31s", username, password) == 3)
-                    bras_set(username, password);
-            } else
-                if(debug) fprintf(stderr, "Unrecognized command: %s\n", line);
-        }
-
-        fclose(in);
-    } else { /* client closed */
-		if(debug) fprintf(stderr, "Client closed: %d\n", fd);
-
-		client_close(fd);
-        return;
+static void
+on_client_read(struct bufferevent *buf_ev, void *arg) {
+    /* read lines from client */
+    char *cmd = NULL;
+    while((cmd = evbuffer_readline(buf_ev->input))) {
+        translate(cmd);
+        free(cmd);
     }
-
-    event_add((struct event*) arg, NULL);
 }
 
-static void client_close(int fd) {
-	struct node *it = list_find(client_list, fd);
-	/* close and remove client from list, and remove from monitoring */
-	if(it) {
-		event_del(&it->event);
-		close(it->fd);
-		list_remove(it);
-	} else {
-		fprintf(stderr, "Remove invalid client from list: %d\n", fd);
-	}
+static void
+on_client_write(struct bufferevent *buf_ev, void *arg) {
+}
+
+static void
+on_client_error(struct bufferevent *buf_ev, short what, void *arg) {
+    if (!(what & EVBUFFER_EOF))
+        warn("Client socket error.");
+
+    struct node *client = (struct node*) arg;
+
+    if (debug)
+        warn("Client closed: %d.", client->fd);
+
+    /* free and close */
+    close(client->fd);
+    list_remove(client);
+    bufferevent_free(buf_ev);
+}
+
+static void
+translate(const char *cmd) {
+    /* skip empty line */
+    if (!*cmd) return;
+
+    /* parse the commands */
+    char username[16], password[32];
+
+    if (strhcmp(cmd, "STAT"))
+        broadcast_state();
+    else if (strhcmp(cmd, "CONNECT"))
+        bras_connect();
+    else if (strhcmp(cmd, "DISCONNECT"))
+        bras_disconnect();
+    else if (sscanf(cmd, "SET %15s %31s", username, password) == 3)
+        bras_set(username, password);
+    else
+        if (debug)
+            warn("Unrecognized command: %s\n", cmd);
 }

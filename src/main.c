@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <err.h>
 
 #include <unistd.h>
-#include <fcntl.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -26,9 +26,6 @@ pid_t init_xl2tpd(int *out, int *err);
 
 static void handle_interupt(int);
 static void on_send_success(int);
-
-/* set the fd to non-blocking mode */
-static int set_nonblock(int fd);
 
 /* callbacks for libevent */
 static void on_xl2tpd_read(struct bufferevent *buf_ev, void *arg);
@@ -84,6 +81,8 @@ int main(int argc, char *argv[]) {
 
     /* init libevent */
     event_init();
+
+    /* server's fd */
     struct event ev_server;
 
     /* xl2tpd's stdout and stderr */
@@ -101,7 +100,7 @@ int main(int argc, char *argv[]) {
     bufferevent_enable(ev_err, EV_READ);
     bufferevent_enable(ev_out, EV_READ);
 
-    /* use libevent to listen on pipe */
+    /* use libevent to listen*/
     event_set(&ev_server, server_fd, EV_READ, server_callback, &ev_server);
     event_add(&ev_server, NULL);
 
@@ -193,19 +192,6 @@ static void on_send_success(int sig) {
     broadcast_state();
 }
 
-static int set_nonblock(int fd) {
-    int flags;
-
-    flags = fcntl(fd, F_GETFL);
-    if (flags < 0) return flags;
-
-    flags |= O_NONBLOCK;
-    if (fcntl(fd, F_SETFL, flags) < 0)
-        return -1;
-
-    return 0;
-}
-
 /* there is new output of xl2tpd */
 static void
 on_xl2tpd_read(struct bufferevent *buf_ev, void *arg) {
@@ -229,6 +215,9 @@ on_xl2tpd_write(struct bufferevent *buf_ev, void *arg) {
 /* an error occurred, may be EOF */
 static void
 on_xl2tpd_error(struct bufferevent *buf_ev, short what, void *arg) {
+    if(!(what & EVBUFFER_EOF))
+        warn("xl2tpd error, will exit.");
+
     /* free data */
     bufferevent_free(buf_ev);
 
