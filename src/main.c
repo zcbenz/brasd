@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 #include <unistd.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -22,12 +23,20 @@ struct options_t options;
 
 void kill_xl2tpd();
 pid_t init_xl2tpd(int *out, int *err);
-void on_out(int fd, short event, void *arg);
-void breakdown_output(const char *, size_t);
-void translate(const char *);
 
 static void handle_interupt(int);
 static void on_send_success(int);
+
+/* set the fd to non-blocking mode */
+static int set_nonblock(int fd);
+
+/* callbacks for libevent */
+static void on_xl2tpd_read(struct bufferevent *buf_ev, void *arg);
+static void on_xl2tpd_write(struct bufferevent *buf_ev, void *arg);
+static void on_xl2tpd_error(struct bufferevent *buf_ev, short what, void *arg);
+
+/* translate and broadcast xl2tpd's output */
+static void translate(const char *);
 
 int main(int argc, char *argv[]) {
     /* use "brasd -D" to enter debug mode,
@@ -66,19 +75,31 @@ int main(int argc, char *argv[]) {
 
     /* anti-zombies */
     signal(SIGCHLD, SIG_IGN);
-    /* kill xl2tpd when quit */
+
+    /* gracefully exit on CTRL+C */
     signal(SIGINT, handle_interupt);
 
     /* init libevent */
-    struct event ev_out, ev_err, ev_server;
     event_init();
+    struct event ev_server;
+
+    /* xl2tpd's stdout and stderr */
+    struct bufferevent *ev_err, *ev_out;
+
+    /* set bufferevent */
+    set_nonblock(l2tp_err);
+    set_nonblock(l2tp_out);
+
+    ev_err = bufferevent_new(l2tp_err, on_xl2tpd_read,
+        on_xl2tpd_write, on_xl2tpd_error, NULL);
+    ev_out = bufferevent_new(l2tp_out, on_xl2tpd_read,
+        on_xl2tpd_write, on_xl2tpd_error, NULL);
+
+    bufferevent_enable(ev_err, EV_READ);
+    bufferevent_enable(ev_out, EV_READ);
 
     /* use libevent to listen on pipe */
-    event_set(&ev_err, l2tp_err, EV_READ, on_out, &ev_err);
-    event_set(&ev_out, l2tp_out, EV_READ, on_out, &ev_out);
     event_set(&ev_server, server_fd, EV_READ, server_callback, &ev_server);
-    event_add(&ev_err, NULL);
-    event_add(&ev_out, NULL);
     event_add(&ev_server, NULL);
 
     /* use sigalarm to delay sending CONNECTED state */
@@ -86,6 +107,13 @@ int main(int argc, char *argv[]) {
 
     /* enter loop */
     event_dispatch();
+
+    /* kill xl2tpd */
+    kill(xl2tpd_pid, SIGKILL);
+
+    /* close fds and wait to exit */
+    close(l2tp_err);
+    close(l2tp_out);
     wait(NULL);
 
     return 0;
@@ -145,37 +173,67 @@ err_err:
     return -1;
 }
 
-/* called when there is new output of xl2tpd */
-void on_out(int fd, short event, void *arg) {
-    char buffer[512] = { 0 };
-    size_t len;
-    if((len = read(fd, buffer, 512)) > 0)
-        breakdown_output(buffer, len);
-    else {
-        if(debug) fputs("l2tpd ended\n", stderr);
-        close(fd);
-        exit(EXIT_SUCCESS);
-    }
+static void handle_interupt(int signum) {
+    if(state == CONNECTED) bras_disconnect();
 
-    event_add((struct event*) arg, NULL);
+    usleep(100000);
+    event_loopbreak();
 }
 
-/* break down output of xl2tpd into commands */
-void breakdown_output(const char *output, size_t length) {
-    /* turn string into file stream */
-    FILE *f_pipe = fmemopen((void*)output, length, "r");
+static void on_send_success(int sig) {
+    alarm(0);
 
-    char buffer[128];
-    int ret, pid;
-    while((ret = fscanf(f_pipe, "xl2tpd[%d]: ", &pid)) != EOF) {
-        if(ret != 1) continue;
-        if(!fgets(buffer, 128, f_pipe)) break;
-        translate(buffer);
+    state = CONNECTED;
+    notify_send("BRAS", "You have connected to BRAS", "notification-network-wireless-full");
+    broadcast_state();
+}
+
+static int set_nonblock(int fd) {
+    int flags;
+
+    flags = fcntl(fd, F_GETFL);
+    if (flags < 0) return flags;
+
+    flags |= O_NONBLOCK;
+    if (fcntl(fd, F_SETFL, flags) < 0)
+        return -1;
+
+    return 0;
+}
+
+/* there is new output of xl2tpd */
+static void
+on_xl2tpd_read(struct bufferevent *buf_ev, void *arg) {
+    /* get the length of "xl2tpd[123]: " */
+    char cmd_head[64];
+    int head_len = snprintf(cmd_head, 64, "xl2tpd[%d]: ", xl2tpd_pid);
+
+    /* readline */
+    char *cmd = NULL;
+    while((cmd = evbuffer_readline(buf_ev->input))) {
+        translate(cmd + head_len);
+        free(cmd);
     }
 }
 
-/* get state from xl2tpd's output */
-void translate(const char *output) {
+/* required by libevent, ignore it */
+static void
+on_xl2tpd_write(struct bufferevent *buf_ev, void *arg) {
+}
+
+/* an error occurred, may be EOF */
+static void
+on_xl2tpd_error(struct bufferevent *buf_ev, short what, void *arg) {
+    /* free data */
+    bufferevent_free(buf_ev);
+
+    /* exit loop, and close fds at main() */
+    event_loopbreak();
+}
+
+/* translate and broadcast xl2tpd's output */
+static void
+translate(const char *output) {
     if(strhcmp(output, "start_pppd")) {
         /* start_pppd doesn't mean auth is ok,
          * so if we do not get call_close in one second, 
@@ -218,19 +276,5 @@ void translate(const char *output) {
     }
 
     if(debug) puts(output);
-}
-
-static void handle_interupt(int signum) {
-    if(state == CONNECTED) bras_disconnect();
-    usleep(100000);
-    kill(xl2tpd_pid, SIGKILL);
-}
-
-static void on_send_success(int sig) {
-    alarm(0);
-
-    state = CONNECTED;
-    notify_send("BRAS", "You have connected to BRAS", "notification-network-wireless-full");
-    broadcast_state();
 }
 
