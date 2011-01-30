@@ -77,7 +77,10 @@ int main(int argc, char *argv[]) {
     signal(SIGCHLD, SIG_IGN);
 
     /* gracefully exit on CTRL+C */
-    signal(SIGINT, handle_interupt);
+    signal(SIGINT  , handle_interupt);
+    signal(SIGHUP  , handle_interupt);
+    signal(SIGTERM , handle_interupt);
+    signal(SIGQUIT , handle_interupt);
 
     /* init libevent */
     event_init();
@@ -173,7 +176,9 @@ err_err:
     return -1;
 }
 
-static void handle_interupt(int signum) {
+/* disconnect bras and exit loop when received exit signal */
+static void
+handle_interupt(int signum) {
     if(state == CONNECTED) bras_disconnect();
 
     usleep(100000);
