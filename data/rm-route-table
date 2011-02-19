@@ -1,0 +1,12 @@
+route del -net 172.16.0.0 netmask 255.240.0.0 gw %s
+route del -net 202.119.0.0 netmask 255.255.224.0 gw %s
+route del -net 202.119.144.0 netmask 255.255.240.0 gw %s
+route del -net 211.65.32.0 netmask 255.255.224.0 gw %s
+route del -net 202.119.24.55 netmask 255.255.255.255 gw %s
+route del -net 58.192.112.0 netmask 255.255.240.0 gw %s
+route del -net 121.229.0.0 netmask 255.255.0.0 gw %s
+route del -net 10.0.0.0 netmask 255.0.0.0 gw %s
+route del -net 121.248.48.0 netmask 255.255.240.0 gw %s
+route del -net 211.65.232.0 netmask 255.255.252.0 gw %s
+route del default
+route add default gw %s

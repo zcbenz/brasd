@@ -19,7 +19,11 @@
 #define CHAPSECRET_TPL   CONFIGS_DIR "/chap-secrets"
 #define PPPOPTIONS_TPL   CONFIGS_DIR "/options.l2tpd"
 /* route table file path */
-#define ROUTE_TABLE_PATH DATA_DIR "/route-table"
+#define ADD_ROUTE_TABLE_PATH DATA_DIR "/add-route-table"
+#define RM_ROUTE_TABLE_PATH  DATA_DIR "/rm-route-table"
+
+/* remember default gateway */
+static char default_gateway[64] = { 0 };
 
 static int write_to(const char *string, const char *path);
 static int get_file_size(int fd);
@@ -44,14 +48,35 @@ int bras_get_default_gateway(char *buffer)
     return 0;
 }
 
-int bras_add_route() {
-    char default_gateway[64];
+int bras_restore_route()
+{
+    /* read route table from file */
+    FILE *table = fopen(RM_ROUTE_TABLE_PATH, "r");
+    if(!table) {
+        perror("Can not open rm-route-table file");
+        return -1;
+    }
+
+    /* rm route table line by line */
+    char line[512], command[512];
+    while(fgets(line, 512, table)) {
+        sprintf(command, line, default_gateway);
+        pclose(popen(command, "r"));
+    }
+
+    fclose(table);
+
+    return 0;
+}
+
+int bras_add_route()
+{
     if(bras_get_default_gateway(default_gateway)) return -1;
 
     /* read route table from file */
-    FILE *table = fopen(ROUTE_TABLE_PATH, "r");
+    FILE *table = fopen(ADD_ROUTE_TABLE_PATH, "r");
     if(!table) {
-        perror("Can not open route table file");
+        perror("Can not open add-route-table file");
         return -1;
     }
 
@@ -61,6 +86,8 @@ int bras_add_route() {
         sprintf(command, line, default_gateway);
         pclose(popen(command, "r"));
     }
+
+    fclose(table);
 
     return 0;
 }
@@ -73,6 +100,7 @@ int bras_connect()
 
 int bras_disconnect()
 {
+    bras_restore_route();
     return write_to("d seubras", XL2TPD_CONTORL);
 }
 

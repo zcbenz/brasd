@@ -9,6 +9,7 @@ enum BRAS_STATE {
 };
 
 int bras_get_default_gateway(char *buffer);
+int bras_restore_route();
 int bras_add_route();
 int bras_connect();
 int bras_disconnect();
