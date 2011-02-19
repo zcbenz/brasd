@@ -150,6 +150,9 @@ on_client_read(struct bufferevent *buf_ev, void *arg) {
     /* read lines from client */
     char *cmd = NULL;
     while ((cmd = evbuffer_readline(buf_ev->input))) {
+        if (debug)
+            fprintf(stderr, "cmd: %s\n", cmd);
+
         translate(cmd, buf_ev);
         free(cmd);
     }
@@ -190,7 +193,7 @@ translate(const char *cmd, struct bufferevent *buf_ev) {
         bras_connect();
     else if (strhcmp(cmd, "DISCONNECT"))
         bras_disconnect();
-    else if (sscanf(cmd, "SET %15s %31s", username, password) == 3)
+    else if (sscanf(cmd, "SET %15s %31s", username, password) == 2)
         bras_set(username, password);
     else {
         if (debug)

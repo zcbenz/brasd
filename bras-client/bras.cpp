@@ -128,7 +128,7 @@ void Bras::emit_signal(State new_state) {
 }
 
 void Bras::write(const char *str) {
-    if(::write(bras_, str, strlen(str) + 1) <= 0)
+    if(::write(bras_, str, strlen(str)) <= 0)
         emit_signal(CLOSED);
 }
 

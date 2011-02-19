@@ -104,7 +104,6 @@ void LoginDlg::on_login() {
 
     window_->hide();
 
-    usleep(10000);
     signal_login.emit();
 }
 
