@@ -33,10 +33,10 @@ static void on_client_write(struct bufferevent *buf_ev, void *arg);
 static void on_client_error(struct bufferevent *buf_ev, short what, void *arg);
 
 /* translate client's commands into actions */
-static void translate(const char *);
+static void translate(const char *cmd, struct bufferevent *buf_ev);
 
 /* tell the client of current state */
-static void post_state(struct node *client);
+static void post_state(struct bufferevent *buf_ev);
 
 int init_server(const char *node, const char *service) {
     /* set node as NULL if options.internet is on */
@@ -125,7 +125,7 @@ server_callback(int fd, short event, void *arg) {
     bufferevent_enable(client->buf_ev, EV_READ);
 
     /* tell the client of current state */
-    post_state(client);
+    post_state(client->buf_ev);
 }
 
 /* tell all clients of current state */
@@ -141,8 +141,8 @@ broadcast_state() {
 
 /* tell the client of current state */
 void
-post_state(struct node *client) {
-    bufferevent_write(client->buf_ev, description[state], strlen(description[state]));
+post_state(struct bufferevent *buf_ev) {
+    bufferevent_write(buf_ev, description[state], strlen(description[state]));
 }
 
 static void
@@ -150,7 +150,7 @@ on_client_read(struct bufferevent *buf_ev, void *arg) {
     /* read lines from client */
     char *cmd = NULL;
     while ((cmd = evbuffer_readline(buf_ev->input))) {
-        translate(cmd);
+        translate(cmd, buf_ev);
         free(cmd);
     }
 }
@@ -177,7 +177,7 @@ on_client_error(struct bufferevent *buf_ev, short what, void *arg) {
 
 /* translate client's commands into actions */
 static void
-translate(const char *cmd) {
+translate(const char *cmd, struct bufferevent *buf_ev) {
     /* skip empty line */
     if (!*cmd) return;
 
@@ -192,7 +192,10 @@ translate(const char *cmd) {
         bras_disconnect();
     else if (sscanf(cmd, "SET %15s %31s", username, password) == 3)
         bras_set(username, password);
-    else
+    else {
         if (debug)
             warn("Unrecognized command: %s\n", cmd);
+
+        post_state(buf_ev);
+    }
 }
