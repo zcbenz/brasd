@@ -21,8 +21,8 @@ brasd是一个图形端的bras拨号程序，可以自动照料好网关和路�
 
 注意：
     如果你的发行版的系统脚本没有储存在/etc/init.d/，请不要执行
-    make install-service，请将源码树根目录下的brasd文件复制到你的系统脚本
-    目录中。
+    make install-service，请将源码树根目录下的brasd.init文件复制到你的系统
+    脚本目录中。
 
 程序依赖
 ========

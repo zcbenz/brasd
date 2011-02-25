@@ -12,7 +12,6 @@ install-service:
 	ln -f -s /etc/init.d/brasd /etc/rc3.d/S80brasd
 	ln -f -s /etc/init.d/brasd /etc/rc4.d/S80brasd
 	ln -f -s /etc/init.d/brasd /etc/rc5.d/S80brasd
-	ln -f -s $(bindir)/brasd /usr/sbin/brasd
 	/etc/init.d/brasd start
 
 uninstall-service:
@@ -22,5 +21,4 @@ uninstall-service:
 	rm -f /etc/rc4.d/S80brasd
 	rm -f /etc/rc5.d/S80brasd
 	rm -f /etc/init.d/brasd
-	rm -f /usr/sbin/brasd
 
