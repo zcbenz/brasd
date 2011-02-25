@@ -64,3 +64,29 @@ https://launchpad.net/brasd
     route -n
 
 5. 请把上面所有命令的输出记录下来，贴在回报问题的帖子中
+
+6. 你可以在虎踞龙盘BBS的Linux版块回报问题，但我还是建议在launchpad的项目
+   页面Report a bug：
+    https://bugs.launchpad.net/brasd/+filebug
+
+脚本化
+======
+对bras的控制通过sockets进行，也就是说你可以通过脚本来控制bras的状态。
+
+查看bras状态：
+    echo "STAT" | netcat 127.0.0.1 10086
+
+设置用户名和密码：
+    echo "SET username password" | netcat 127.0.0.1 10086
+
+连接bras：
+    echo "CONNECT" | netcat 127.0.0.1 10086
+
+断开bras：
+    echo "DISCONNECT" | netcat 127.0.0.1 10086
+
+出于安全考量，默认情况下你无法远程控制bras，你可以在/etc/brasd中加上下面
+的设置来打开网络控制：
+    internet on
+
+这样将上面的127.0.0.1修改为远程机器的密码即可远程控制bras。
