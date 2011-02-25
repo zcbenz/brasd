@@ -30,6 +30,5 @@ static void on_connecting();
 static void on_connected();
 static void on_using();
 static void on_error();
+static void on_brasd_no_response();
 static void on_dlg_response(int response);
-
-static bool on_brasd_no_response();

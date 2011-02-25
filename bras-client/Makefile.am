@@ -15,7 +15,7 @@ bras_client_SOURCES = \
 bras_client_LDFLAGS  = --as-needed 
 bras_client_LDADD    = $(GTKMM_LIBS)
 
-bras_client_CPPFLAGS = -Wall -Wextra -DUI_DIR=\""$(pkgdatadir)/ui"\" \
+bras_client_CPPFLAGS = -Wall -DUI_DIR=\""$(pkgdatadir)/ui"\" \
 					   $(GTKMM_CFLAGS)
 
 run:

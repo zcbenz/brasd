@@ -102,7 +102,7 @@ void LoginDlg::on_login() {
 
     bras_->set(username.c_str(), password.c_str());
 
-    window_->hide();
+    hide();
 
     signal_login.emit();
 }

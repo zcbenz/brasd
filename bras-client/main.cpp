@@ -3,7 +3,6 @@
 
 /* global values */
 static Gtk::MessageDialog *cur_dlg = NULL;
-static sigc::connection *con_response = NULL;
 static LoginDlg *logindlg = NULL;
 
 int main(int argc, char *argv[]) {
@@ -74,12 +73,6 @@ inline LoginDlg *create_login_dialog() {
 static void on_bras_state_change(Bras::State state, Bras::State) {
     hide_current_dialog();
 
-    if(con_response) { /* cancel previous no_response call */
-        con_response->disconnect();
-        delete con_response;
-        con_response = NULL;
-    }
-
     /* call functions of each state */
     static state_func_t state_funcs[Bras::COUNT] = {
         on_connected, on_connecting, on_login, on_error, on_quit, on_using
@@ -127,6 +120,13 @@ static void on_error() {
                   Gtk::BUTTONS_OK)->show();
 }
 
+static void on_brasd_no_response() {
+    if(!cur_dlg && (!logindlg || !logindlg->is_show()))
+        create_dialog("Waiting for brasd's response...",
+                      Gtk::MESSAGE_OTHER,
+                      Gtk::BUTTONS_CLOSE)->show();
+}
+
 static void on_dlg_response(int response) {
     Bras *bras = Bras::get();
 
@@ -145,16 +145,7 @@ static void on_dlg_response(int response) {
     }
 
     /* if not receive state in 100ms, show no_response dialog */
-    con_response = new sigc::connection(
-        Glib::signal_timeout().connect(sigc::ptr_fun(on_brasd_no_response), 100));
+    Glib::signal_timeout().connect_once(
+            sigc::ptr_fun(on_brasd_no_response),
+            100);
 }
-
-static bool on_brasd_no_response() {
-    if(!cur_dlg && (!logindlg || !logindlg->is_show()))
-        create_dialog("Waiting for brasd's response...",
-                      Gtk::MESSAGE_OTHER,
-                      Gtk::BUTTONS_CLOSE)->show();
-
-    return false;
-}
-
