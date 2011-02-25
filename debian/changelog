@@ -1,3 +1,14 @@
+brasd (0.1.2-1ubuntu4) maverick; urgency=low
+
+  * bras-client can remember multi usernames
+  * brasd supports multi clients now
+  * brasd will terminate running instances
+  * brasd uses /etc/brasd to store configurations
+  * route table is placed in an independent file
+  * codes are more robust now
+
+ -- Zhao Cheng <zcbenz@gmail.com>  Fri, 25 Feb 2011 12:31:38 +0800
+
 brasd (0.1.2-1ubuntu3) maverick; urgency=low
 
   * Force ppa upgrade
