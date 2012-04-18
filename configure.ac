@@ -73,5 +73,5 @@ else
     AC_DEFINE([HAVE_NOTIFY_OSD], 0, [Support for Notify OSD])
 fi
 
-AC_CONFIG_FILES([Makefile src/Makefile data/Makefile bras-client/Makefile bras-client/ui/Makefile debian/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile data/Makefile bras-client/Makefile bras-client/ui/Makefile])
 AC_OUTPUT

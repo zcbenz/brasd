@@ -1,10 +1,12 @@
-SUBDIRS = src data debian $(CLIENT_DIR)
-DIST_SUBDIRS = src data bras-client debian
+SUBDIRS = src data $(CLIENT_DIR)
+DIST_SUBDIRS = src data bras-client
 
 EXTRA_DIST = brasd.init \
-			 ANNOUCEMENT README README.chinese TODO CREDITS BUGS Changelog \
-			 mkdeb mkppa brasd.recipe\
-			 packaging
+			 README.md CREDITS Changelog \
+			 brasd.recipe packaging \
+			 installer/generate_installer.sh \
+			 installer/makeself-header.sh \
+			 installer/makeself.sh
 
 install-service:
 	cp $(srcdir)/brasd.init /etc/init.d/brasd

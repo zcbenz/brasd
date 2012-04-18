@@ -5250,7 +5250,7 @@ $as_echo "#define HAVE_NOTIFY_OSD 0" >>confdefs.h
 
 fi
 
-ac_config_files="$ac_config_files Makefile src/Makefile data/Makefile bras-client/Makefile bras-client/ui/Makefile debian/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile data/Makefile bras-client/Makefile bras-client/ui/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -5992,7 +5992,6 @@ do
     "data/Makefile") CONFIG_FILES="$CONFIG_FILES data/Makefile" ;;
     "bras-client/Makefile") CONFIG_FILES="$CONFIG_FILES bras-client/Makefile" ;;
     "bras-client/ui/Makefile") CONFIG_FILES="$CONFIG_FILES bras-client/ui/Makefile" ;;
-    "debian/Makefile") CONFIG_FILES="$CONFIG_FILES debian/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
