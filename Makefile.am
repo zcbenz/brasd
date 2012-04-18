@@ -8,6 +8,9 @@ EXTRA_DIST = brasd.init \
 			 installer/makeself-header.sh \
 			 installer/makeself.sh
 
+package:
+	./installer/generate_installer.sh
+
 install-service:
 	cp $(srcdir)/brasd.init /etc/init.d/brasd
 	ln -f -s /etc/init.d/brasd /etc/rc2.d/S80brasd

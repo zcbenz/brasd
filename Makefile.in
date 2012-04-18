@@ -690,6 +690,9 @@ uninstall-am:
 	pdf-am ps ps-am tags tags-recursive uninstall uninstall-am
 
 
+package:
+	./installer/generate_installer.sh
+
 install-service:
 	cp $(srcdir)/brasd.init /etc/init.d/brasd
 	ln -f -s /etc/init.d/brasd /etc/rc2.d/S80brasd
