@@ -1,0 +1,11 @@
+*.deps
+*.o
+Makefile
+autom4te.cache/
+bras-client/Makefile
+bras-client/bras-client
+config.h
+config.log
+config.status
+src/brasd
+stamp-h1

@@ -24,9 +24,8 @@ brasd是一个图形端的bras拨号程序，可以自动照料好网关和路�
     sudo make install-service # 安装系统服务
 
 注意：
-    如果你的发行版的系统脚本没有储存在/etc/init.d/，请不要执行
-    make install-service，请将源码树根目录下的brasd.init文件复制到你的系统
-    脚本目录中。
+如果你的发行版的系统脚本没有储存在/etc/init.d/，请不要执行make install-service，请将源码树根目录下的brasd.init文件复制到你的系统
+脚本目录中。
 
 程序依赖
 --------
@@ -49,11 +48,6 @@ libevent 和 gtkmm
 连接到bras后，如果中途切换了网络，可能会导致网络不正常，这时请重新连接一次
 网络。这是由于在和bras服务器的连接断开后，xl2tpd不会马上结束，而是重试多次
 后才会结束，此时会导致切换后的网络的路由表被破坏。
-
-项目主页
---------
-
-https://launchpad.net/brasd
 
 如何回报问题
 ------------

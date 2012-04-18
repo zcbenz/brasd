@@ -51,8 +51,6 @@ am_bras_client_OBJECTS = bras_client-main.$(OBJEXT) \
 bras_client_OBJECTS = $(am_bras_client_OBJECTS)
 am__DEPENDENCIES_1 =
 bras_client_DEPENDENCIES = $(am__DEPENDENCIES_1)
-bras_client_LINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
-	$(bras_client_LDFLAGS) $(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/build-aux/depcomp
 am__depfiles_maybe = depfiles
@@ -219,7 +217,6 @@ bras_client_SOURCES = \
 	logindlg.cpp \
 	logindlg.h
 
-bras_client_LDFLAGS = --as-needed 
 bras_client_LDADD = $(GTKMM_LIBS)
 bras_client_CPPFLAGS = -Wall -DUI_DIR=\""$(pkgdatadir)/ui"\" \
 					   $(GTKMM_CFLAGS)
@@ -297,7 +294,7 @@ clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
 bras-client$(EXEEXT): $(bras_client_OBJECTS) $(bras_client_DEPENDENCIES) 
 	@rm -f bras-client$(EXEEXT)
-	$(bras_client_LINK) $(bras_client_OBJECTS) $(bras_client_LDADD) $(LIBS)
+	$(CXXLINK) $(bras_client_OBJECTS) $(bras_client_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
