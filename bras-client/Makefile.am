@@ -12,9 +12,7 @@ bras_client_SOURCES = \
 	logindlg.cpp \
 	logindlg.h
 
-bras_client_LDFLAGS  = --as-needed 
 bras_client_LDADD    = $(GTKMM_LIBS)
-
 bras_client_CPPFLAGS = -Wall -DUI_DIR=\""$(pkgdatadir)/ui"\" \
 					   $(GTKMM_CFLAGS)
 

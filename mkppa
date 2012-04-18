@@ -1,6 +1,0 @@
-#!/bin/bash
-
-make
-make dist
-debuild -kB16A1050 -S
-dput ppa:zcbenz/brasd ../*.changes

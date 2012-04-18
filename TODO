@@ -1,8 +1,0 @@
-bras-client在brasd未启动时提示启动brasd
-
-brasd传递错误具体信息
-brasd翻译命令时的代码重写
-brasd增强对路由的处理：断开连接时恢复原始路由
-
-增加bras-indicator，用于在托盘区显出BRAS状态，并提供连接/断线/多账号切换
-等功能
