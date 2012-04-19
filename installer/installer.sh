@@ -32,6 +32,6 @@ fi
 echo "启动brasd"
 echo $PASS | sudo -S mkdir /var/run/xl2tpd/
 echo $PASS | sudo -S touch /var/run/xl2tpd/l2tp-control
-echo $PASS | sudo -S brasd
+echo $PASS | sudo -S /usr/local/sbin/brasd
 
 zenity --info --title "brasd安装脚本" --text "安装成功"
