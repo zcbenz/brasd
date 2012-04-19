@@ -220,7 +220,7 @@ on_xl2tpd(struct aeEventLoop *eventLoop, int fd, void *clientData, int mask) {
     }
     free(lines);
 
-    x_buf = sdsempty();
+    sdsclear(x_buf);
 }
 
 /* translate and broadcast xl2tpd's output */

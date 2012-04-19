@@ -132,7 +132,7 @@ client_cb(struct aeEventLoop *eventLoop, int fd, void *clientData, int mask) {
     }
     free(lines);
 
-    client->buffer = sdsempty();
+    sdsclear(client->buffer);
 }
 
 /* translate client's commands into actions */
