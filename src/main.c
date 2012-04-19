@@ -10,11 +10,23 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 
-#include <event.h>
+/* redis library */
+#include "ae.h"
+#include "anet.h"
+#include "sds.h"
 
 #include "bras.h"
 #include "server.h"
 #include "utils.h"
+
+/* the main loop */
+aeEventLoop *loop;
+
+/* xl2tpd output buffer */
+sds x_buf;
+
+/* timer id */
+long long timer_id = -1;
 
 enum BRAS_STATE state;
 int xl2tpd_pid, server_fd;
@@ -25,12 +37,9 @@ void kill_xl2tpd();
 pid_t init_xl2tpd(int *out, int *err);
 
 static void handle_interupt(int);
-static void on_send_success(int);
 
 /* callbacks for libevent */
-static void on_xl2tpd_read(struct bufferevent *buf_ev, void *arg);
-static void on_xl2tpd_write(struct bufferevent *buf_ev, void *arg);
-static void on_xl2tpd_error(struct bufferevent *buf_ev, short what, void *arg);
+static void on_xl2tpd(struct aeEventLoop *eventLoop, int fd, void *clientData, int mask);
 
 /* translate and broadcast xl2tpd's output */
 static void translate(const char *);
@@ -64,7 +73,7 @@ int main(int argc, char *argv[]) {
     state = DISCONNECTED;
 
     /* init server */
-    if((server_fd = init_server(options.server, options.port)) < 0) {
+    if((server_fd = init_server(options.server, atoi(options.port))) < 0) {
         fputs("Cannot init server, brasd already runs?\n", stderr);
         kill(xl2tpd_pid, SIGKILL);
         exit(EXIT_FAILURE);
@@ -79,36 +88,25 @@ int main(int argc, char *argv[]) {
     signal(SIGTERM , handle_interupt);
     signal(SIGQUIT , handle_interupt);
 
-    /* init libevent */
-    event_init();
+    /* init buffer */
+    x_buf = sdsempty();
 
-    /* server's fd */
-    struct event ev_server;
+    /* init ae */
+    loop = aeCreateEventLoop();
 
-    /* xl2tpd's stdout and stderr */
-    struct bufferevent *ev_err, *ev_out;
+    /* listen to xl2tpd's output and input */
+    if (AE_ERR == aeCreateFileEvent(loop, l2tp_out, AE_READABLE, on_xl2tpd, NULL))
+        fprintf (stderr, "aeCreateEventLoop on %d failed\n", l2tp_out);
+    if (AE_ERR == aeCreateFileEvent(loop, l2tp_err, AE_READABLE, on_xl2tpd, NULL))
+        fprintf (stderr, "aeCreateEventLoop on %d failed\n", l2tp_err);
 
-    /* set bufferevent */
-    set_nonblock(l2tp_err);
-    set_nonblock(l2tp_out);
-
-    ev_err = bufferevent_new(l2tp_err, on_xl2tpd_read,
-        on_xl2tpd_write, on_xl2tpd_error, NULL);
-    ev_out = bufferevent_new(l2tp_out, on_xl2tpd_read,
-        on_xl2tpd_write, on_xl2tpd_error, NULL);
-
-    bufferevent_enable(ev_err, EV_READ);
-    bufferevent_enable(ev_out, EV_READ);
-
-    /* use libevent to listen*/
-    event_set(&ev_server, server_fd, EV_READ, server_callback, &ev_server);
-    event_add(&ev_server, NULL);
-
-    /* use sigalarm to delay sending CONNECTED state */
-    signal(SIGALRM, on_send_success);
+    /* listen to the server */
+    if (AE_ERR == aeCreateFileEvent(loop, server_fd, AE_READABLE, server_callback, NULL))
+        fprintf (stderr, "aeCreateEventLoop on %d failed\n", l2tp_out);
 
     /* enter loop */
-    event_dispatch();
+    aeMain(loop);
+    aeDeleteEventLoop(loop);
 
     /* kill xl2tpd */
     kill(xl2tpd_pid, SIGKILL);
@@ -182,60 +180,62 @@ handle_interupt(int signum) {
     if(state == CONNECTED) bras_disconnect();
 
     usleep(100000);
-    event_loopbreak();
+    aeStop(loop);
 }
 
-static void on_send_success(int sig) {
-    alarm(0);
-
+static int
+on_send_success(struct aeEventLoop *eventLoop, long long id, void *clientData) {
     state = CONNECTED;
-    notify_send("BRAS", "You have connected to BRAS", "notification-network-wireless-full");
     broadcast_state();
+
+    return AE_NOMORE;
 }
 
 /* there is new output of xl2tpd */
 static void
-on_xl2tpd_read(struct bufferevent *buf_ev, void *arg) {
-    /* get the length of "xl2tpd[123]: " */
-    char cmd_head[64];
-    int head_len = snprintf(cmd_head, 64, "xl2tpd[%d]: ", xl2tpd_pid);
+on_xl2tpd(struct aeEventLoop *eventLoop, int fd, void *clientData, int mask) {
+    /* read */
+    char buffer[1024];
+    int len = read(fd, buffer, 1024);
+    if (len <= 0) {
+        if (debug) {
+            perror("on_xl2tpd(anetRead)");
+            fprintf(stderr, "xl2tpd quit\n");
+        }
 
-    /* readline */
-    char *cmd = NULL;
-    while((cmd = evbuffer_readline(buf_ev->input))) {
-        translate(cmd + head_len);
-        free(cmd);
+        aeStop(loop);
+        return;
     }
-}
 
-/* required by libevent, ignore it */
-static void
-on_xl2tpd_write(struct bufferevent *buf_ev, void *arg) {
-}
+    /* push to total and split */
+    int count = 0;
+    x_buf = sdscatlen(x_buf, buffer, len);
+    sds *lines = sdssplitlen(x_buf, sdslen(x_buf), "\n", 1, &count);
 
-/* an error occurred, may be EOF */
-static void
-on_xl2tpd_error(struct bufferevent *buf_ev, short what, void *arg) {
-    if(!(what & EVBUFFER_EOF))
-        warn("xl2tpd error, will exit.");
+    /* translate */
+    int i;
+    for (i = 0; i < count; i++) {
+        translate(lines[i]);
+        sdsfree(lines[i]);
+    }
+    free(lines);
 
-    /* free data */
-    bufferevent_free(buf_ev);
-
-    /* exit loop, and close fds at main() */
-    event_loopbreak();
+    x_buf = sdsempty();
 }
 
 /* translate and broadcast xl2tpd's output */
 static void
 translate(const char *output) {
-    if(strhcmp(output, "start_pppd")) {
-        /* start_pppd doesn't mean auth is ok,
-         * so if we do not get call_close in one second, 
-         * we can know connection is successfully established */
-        alarm(6);
-    }
-    else if (strhcmp(output, "Connecting to host")) {
+    /* skip : */
+    while (*output && *output != ':') ++output;
+    output += 2;
+
+    /* skip blank line */
+    if (!*output)
+        return;
+
+    if (strhcmp(output, "Connecting to host")) {
+        timer_id = aeCreateTimeEvent(loop, 6000, on_send_success, NULL, NULL);
         state = CONNECTING;
         broadcast_state();
     }
@@ -245,21 +245,18 @@ translate(const char *output) {
     else if (strhcmp(output, "Disconnecting from") || 
              strhcmp(output, "Host name lookup failed for "))
     {
-        alarm(0); /* unschedule sending CONNECTED */
-
-        if(state == CONNECTED) /* show notification when disconnected */
-            notify_send("BRAS", "BRAS disconnected", "notification-network-wireless-disconnected");
+        if (timer_id >= 0) /* unschedule sending CONNECTED */
+        {
+            aeDeleteTimeEvent(loop, timer_id);
+            timer_id = -1;
+        }
 
         state = DISCONNECTED;
         broadcast_state();
     }
     else if (strhcmp(output, "call_close:")) {
-        alarm(0); /* unschedule sending CONNECTED */
-
-        state = DISCONNECTED;
         bras_disconnect(); /* when invalid auth disconnect */
-        broadcast_state();
-        puts("Username or password wrong?");
+        fputs("Username or password wrong?", stderr);
     }
     else if (strhcmp(output, "init_network")) {
         state = CRITICAL_ERROR;
@@ -270,6 +267,6 @@ translate(const char *output) {
         fputs("I dont't have enough permission\n", stderr);
     }
 
-    if(debug) puts(output);
+    if (debug)
+        puts(output);
 }
-

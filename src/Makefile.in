@@ -45,10 +45,11 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(sbindir)"
 PROGRAMS = $(sbin_PROGRAMS)
-am_brasd_OBJECTS = main.$(OBJEXT) server.$(OBJEXT) list.$(OBJEXT) \
-	bras.$(OBJEXT) utils.$(OBJEXT)
+am_brasd_OBJECTS = ae.$(OBJEXT) sds.$(OBJEXT) anet.$(OBJEXT) \
+	main.$(OBJEXT) server.$(OBJEXT) list.$(OBJEXT) bras.$(OBJEXT) \
+	utils.$(OBJEXT)
 brasd_OBJECTS = $(am_brasd_OBJECTS)
-brasd_DEPENDENCIES =
+brasd_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/build-aux/depcomp
 am__depfiles_maybe = depfiles
@@ -70,7 +71,7 @@ AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
-CFLAGS = @CFLAGS@ -O2 -Wall -DDATA_DIR=\""$(pkgdatadir)"\" \
+CFLAGS = @CFLAGS@ -g -Wall -DDATA_DIR=\""$(pkgdatadir)"\" \
 	-DCONFIGS_DIR=\""$(pkgdatadir)/configs"\"
 CLIENT_DIR = @CLIENT_DIR@
 CPP = @CPP@
@@ -101,7 +102,6 @@ LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
 MKDIR_P = @MKDIR_P@
-NOTIFY = @NOTIFY@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -163,6 +163,12 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 brasd_SOURCES = \
+	ae.h \
+	ae.c \
+	sds.h \
+	sds.c \
+	anet.h \
+	anet.c \
 	main.c \
 	server.c \
 	server.h \
@@ -173,7 +179,6 @@ brasd_SOURCES = \
 	utils.c \
 	utils.h
 
-brasd_LDADD = -levent
 all: all-am
 
 .SUFFIXES:
@@ -255,9 +260,12 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ae.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/anet.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bras.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/list.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sds.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utils.Po@am__quote@
 

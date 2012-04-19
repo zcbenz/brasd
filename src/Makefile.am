@@ -1,8 +1,14 @@
-CFLAGS+= -O2 -Wall -DDATA_DIR=\""$(pkgdatadir)"\" -DCONFIGS_DIR=\""$(pkgdatadir)/configs"\"
+CFLAGS+= -g -Wall -DDATA_DIR=\""$(pkgdatadir)"\" -DCONFIGS_DIR=\""$(pkgdatadir)/configs"\"
 
 sbin_PROGRAMS = brasd
 
 brasd_SOURCES = \
+	ae.h \
+	ae.c \
+	sds.h \
+	sds.c \
+	anet.h \
+	anet.c \
 	main.c \
 	server.c \
 	server.h \
@@ -12,8 +18,6 @@ brasd_SOURCES = \
 	bras.h \
 	utils.c \
 	utils.h
-
-brasd_LDADD = -levent
 
 run:
 	sudo ./brasd

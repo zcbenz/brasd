@@ -19,9 +19,6 @@ if test "$XL2TPD" != "yes" ; then
     AC_MSG_FAILURE([could not find x2tlpd])
 fi
 
-# Checks for libraries.
-AC_CHECK_LIB([event], [event_init], [], [AC_MSG_FAILURE([could not find libevent])])
-
 # Checks for header files.
 AC_CHECK_HEADERS([fcntl.h netdb.h stdlib.h string.h sys/socket.h unistd.h])
 
@@ -50,28 +47,6 @@ else
     CLIENT_DIR=
 fi
 AC_SUBST([CLIENT_DIR])
-
-dnl ================================================================
-dnl Notify OSD support
-dnl ================================================================
-
-AC_ARG_ENABLE([notify],
-	AS_HELP_STRING([--disable-notify],[Disable Notify OSD support (default: enabled)]),
-	[enable_notify=$enableval],
-	[enable_notify=yes])
-
-if test "x$enable_notify" = "xyes" ; then
-    AC_CHECK_PROG([NOTIFY], [notify-send], [yes])
-
-    if test "$NOTIFY" != "yes" ; then
-        AC_MSG_NOTICE([notify-send cannot be found, so support for Notify OSD will be disabled])
-        AC_DEFINE([HAVE_NOTIFY_OSD], 0, [Support for Notify OSD])
-    else
-        AC_DEFINE([HAVE_NOTIFY_OSD], 1, [Support for Notify OSD])
-    fi
-else
-    AC_DEFINE([HAVE_NOTIFY_OSD], 0, [Support for Notify OSD])
-fi
 
 AC_CONFIG_FILES([Makefile src/Makefile data/Makefile bras-client/Makefile bras-client/ui/Makefile])
 AC_OUTPUT

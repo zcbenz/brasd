@@ -1,11 +1,11 @@
 #ifndef LIST_H
 #define LIST_H
 
-#include <event.h>
+#include "sds.h"
 
 struct node {
     int fd;
-    struct bufferevent *buf_ev;
+    sds buffer;
     struct node *next;
     struct node *prev;
 };

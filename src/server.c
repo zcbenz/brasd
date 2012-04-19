@@ -1,3 +1,6 @@
+#include "sds.h"
+#include "anet.h"
+
 #include "server.h"
 #include "bras.h"
 #include "utils.h"
@@ -9,11 +12,6 @@
 #include <err.h>
 
 #include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-
-#include <event.h>
 
 extern enum BRAS_STATE state;
 extern int debug;
@@ -27,160 +25,119 @@ const char *description[] = {
     "error\n"
 };
 
-/* callbacks for libevent */
-static void on_client_read(struct bufferevent *buf_ev, void *arg);
-static void on_client_write(struct bufferevent *buf_ev, void *arg);
-static void on_client_error(struct bufferevent *buf_ev, short what, void *arg);
-
 /* translate client's commands into actions */
-static void translate(const char *cmd, struct bufferevent *buf_ev);
+static void translate(const char *cmd, struct node *client);
 
 /* tell the client of current state */
-static void post_state(struct bufferevent *buf_ev);
+static void post_state(struct node *client);
 
-int init_server(const char *node, const char *service) {
+/* callbacks for libevent */
+static void client_cb(struct aeEventLoop *eventLoop, int fd, void *clientData, int mask);
+
+/* remove client */
+static void client_remove(struct node *client);
+
+int init_server(const char *bindaddr, int port) {
     /* set node as NULL if options.internet is on */
     if(options.internet)
-        node = NULL;
+        bindaddr = NULL;
 
-    /* init socket */
-    struct addrinfo hints, *result;
-    bzero(&hints, sizeof(struct addrinfo));
-    hints.ai_family   = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags    = AI_PASSIVE;
-
-    if(getaddrinfo(node, service, &hints, &result)) {
-        perror("getaddrinfo");
+    char error[512] = { 0 };
+    int fd = anetTcpServer(error, port, bindaddr);
+    if (ANET_ERR == fd) {
+        fprintf(stderr, "anetTcpServer: %s\n", error);
         return -1;
     }
 
-    int sfd = -1;
-    struct addrinfo *rp;
-    for(rp = result; rp != NULL; rp = rp->ai_next) {
-        sfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-        if(sfd == -1)
-            continue;
+    /* create client list */
+    if(!client_list)
+        client_list = create_list(); /* this list will never be freed */
 
-        if(bind(sfd, rp->ai_addr, rp->ai_addrlen) != -1)
-            break;          /* Success */
-
-        close(sfd);
-    }
-
-    if(!rp) {               /* No address succeeded */
-        perror("Could not bind");
-        close(sfd);
-        return -1;
-    }
-
-    freeaddrinfo(result);
-
-    /* avoid "address in use" error */
-    int val = 1;
-    setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(int));
-
-    if(listen(sfd, 1) == -1) {
-        perror("listen");
-        close(sfd);
-        return -1;
-    }
-
-	/* create client list */
-	if(!client_list)
-		client_list = create_list(); /* this list will never be freed */
-
-    return sfd;
+    return fd;
 }
 
 /* close all clients and then close server */
 void
 close_server(int fd) {
-	struct node *it = client_list->next;
-	while (it) {
-        close(it->fd);
-        bufferevent_free(it->buf_ev);
-        list_remove(it);
+    struct node *it = client_list->next;
+    while (it) {
+        struct node *next = it->next;
+        client_remove(it);
 
-		it = it->next;
-	}
+        it = next;
+    }
 }
 
 /* called by libevent when there is new connection */
 void
-server_callback(int fd, short event, void *arg) {
-    event_add((struct event*) arg, NULL);
+server_callback(struct aeEventLoop *loop, int fd, void *clientData, int mask) {
+    char error[512] = { 0 };
 
-    struct sockaddr client_addr;
-    int client_fd;
-    size_t length = sizeof(struct sockaddr);
-    if((client_fd = accept(fd, &client_addr, &length)) == -1)
+    int child = anetUnixAccept(error, fd);
+    if (child == ANET_ERR) {
+        fprintf(stderr, "anetUnixAccept: %s\n", error);
         return;
+    }
 
     /* add new client to list */
-	struct node *client = list_append(client_list, client_fd);
-    set_nonblock(client_fd);
-    client->buf_ev = bufferevent_new(client_fd, on_client_read,
-            on_client_write, on_client_error, client);
-    bufferevent_enable(client->buf_ev, EV_READ);
+    struct node *client = list_append(client_list, child);
+    client->buffer = sdsempty();
+    if (AE_ERR == aeCreateFileEvent(loop, child, AE_READABLE, client_cb, client))
+        fprintf (stderr, "aeCreateFileEvent(server_callback) on %d failed\n", child);
 
     /* tell the client of current state */
-    post_state(client->buf_ev);
+    post_state(client);
 }
 
 /* tell all clients of current state */
 void
 broadcast_state() {
-	struct node *it = client_list->next;
-	while (it) {
-        bufferevent_write(it->buf_ev, description[state], strlen(description[state]));
-
-		it = it->next;
-	}
+    struct node *it = client_list->next;
+    while (it) {
+        post_state(it);
+        it = it->next;
+    }
 }
 
 /* tell the client of current state */
 void
-post_state(struct bufferevent *buf_ev) {
-    bufferevent_write(buf_ev, description[state], strlen(description[state]));
+post_state(struct node *client) {
+    anetWrite(client->fd, description[state], strlen(description[state]));
 }
 
 static void
-on_client_read(struct bufferevent *buf_ev, void *arg) {
-    /* read lines from client */
-    char *cmd = NULL;
-    while ((cmd = evbuffer_readline(buf_ev->input))) {
-        if (debug)
-            fprintf(stderr, "cmd: %s\n", cmd);
+client_cb(struct aeEventLoop *eventLoop, int fd, void *clientData, int mask) {
+    struct node *client = (struct node *)clientData;
 
-        translate(cmd, buf_ev);
-        free(cmd);
+    /* read */
+    char buffer[512];
+    int len = read(fd, buffer, 512);
+    if (len <= 0) {
+        fprintf(stderr, "Client closed: %d.", fd);
+        aeDeleteFileEvent(eventLoop, fd, mask);
+        client_remove(client);
+        return;
     }
-}
 
-static void
-on_client_write(struct bufferevent *buf_ev, void *arg) {
-}
+    /* push to total and split */
+    int count = 0;
+    client->buffer = sdscatlen(client->buffer, buffer, len);
+    sds *lines = sdssplitlen(client->buffer, sdslen(client->buffer), "\n", 1, &count);
 
-static void
-on_client_error(struct bufferevent *buf_ev, short what, void *arg) {
-    if (!(what & EVBUFFER_EOF))
-        warn("Client socket error.");
+    /* translate */
+    int i;
+    for (i = 0; i < count; i++) {
+        translate(lines[i], client);
+        sdsfree(lines[i]);
+    }
+    free(lines);
 
-    struct node *client = (struct node*) arg;
-
-    if (debug)
-        warn("Client closed: %d.", client->fd);
-
-    /* free and close */
-    close(client->fd);
-    list_remove(client);
-    bufferevent_free(buf_ev);
+    client->buffer = sdsempty();
 }
 
 /* translate client's commands into actions */
 static void
-translate(const char *cmd, struct bufferevent *buf_ev) {
+translate(const char *cmd, struct node *client) {
     /* skip empty line */
     if (!*cmd) return;
 
@@ -196,9 +153,15 @@ translate(const char *cmd, struct bufferevent *buf_ev) {
     else if (sscanf(cmd, "SET %15s %31s", username, password) == 2)
         bras_set(username, password);
     else {
-        if (debug)
-            warn("Unrecognized command: %s\n", cmd);
+        fprintf(stderr, "Unrecognized command: %s\n", cmd);
 
-        post_state(buf_ev);
+        post_state(client);
     }
+}
+
+static void 
+client_remove(struct node *client) {
+    close(client->fd);
+    sdsfree(client->buffer);
+    list_remove(client);
 }
